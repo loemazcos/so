@@ -28,5 +28,5 @@ export function chooseConsult(run: RunState, room: ConsultRoom): RunState {
 export function voteUniform(run: RunState, choice: 1 | 2): RunState {
   if (run.uniform !== null) return run;
   const text = choice === 1 ? '1번 후드? 의외다ㅋㅋ' : '바람막이 쪽이구나. 나도 그거 낌';
-  return addKakaoMessage({ ...run, uniform: choice }, { id: 'uniform-reaction', room: 'donghyun', from: '동현', type: 'text', text }, run.t);
+  return addKakaoMessage({ ...run, uniform: choice }, { id: 'uniform-reaction', room: 'class', from: '동현', type: 'text', text }, run.t);
 }

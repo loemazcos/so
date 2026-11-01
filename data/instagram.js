@@ -228,10 +228,7 @@ export const dmThreads = [
     handle: 'donghyun.daily',
     avatar: '동현',
     activity: '3시간 전 활동',
-    messages: [
-      { from: 'them', text: '급식 봤어?', time: '오후 12:04' },
-      { from: 'me', text: '응 실패', time: '오후 12:06' },
-    ],
+    messages: [],
   },
   {
     id: 'jaehyun',
@@ -239,7 +236,7 @@ export const dmThreads = [
     handle: 'jaehyun.council',
     avatar: '재현',
     activity: '활동 중',
-    messages: [{ from: 'them', text: '내일 회의 자료 같이 볼래?', time: '오후 4:30' }],
+    messages: [],
   },
   {
     id: 'seongho',
@@ -247,6 +244,27 @@ export const dmThreads = [
     handle: 'seongho.patrol',
     avatar: '성호',
     activity: '어제 활동',
-    messages: [{ from: 'them', text: '정문 쪽 조명 아직도 안 들어와', time: '어제 22:15' }],
+    messages: [],
   },
 ];
+
+/*
+ * 1:1 대화 기록 (카톡 시절 대화 내용을 인스타 DM으로 옮긴 것)
+ * - date / time: 보낸 날짜와 시각. from은 보낸 사람 이름, 'me'는 태산입니다.
+ */
+export const personalHistory = {
+  donghyun: [
+    { id: 'k-d01', date: '2026-10-14', time: '19:02', from: '동현', text: '형 병원 갔다 학교 온 거 ㄹㅇ 대박임' },
+    { id: 'k-d02', date: '2026-10-14', time: '19:03', from: '동현', text: '얼굴 빨개서 옴 ㅋㅋㅋㅋ' },
+    { id: 'k-d03', date: '2026-10-14', time: '19:05', from: '동현', text: '아프다면서 왜 왔냐니까 형이 누가 보고싶어서래' },
+    { id: 'k-d04', date: '2026-10-14', time: '19:06', from: '동현', text: 'ㅋㅋㅋㅋㅋㅋ 누구겠냐' },
+    { id: 'k-d05', date: '2026-10-14', time: '19:07', from: '동현', text: '병원은 그냥 좀 아파서 갔다는데 무슨 병원인지는 말 안 해 줌' },
+    { id: 'k-d06', date: '2026-10-14', time: '20:15', from: '동현', text: '근데 형 생일 D-8인데 뭐 줌ㅋㅋ' },
+  ],
+  jaehyun: [
+    { id: 'k-j01', date: '2026-10-14', time: '12:41', from: '재현', text: '상혁 오늘 얼굴이 많이 빨갰다. 열이 있는 건지 모르겠다.' },
+  ],
+  seongho: [
+    { id: 'k-s01', date: '2026-10-14', time: '13:20', from: '성호', text: '상혁이 너 연락 보라던데. 봤냐.' },
+  ],
+};

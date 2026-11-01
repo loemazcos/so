@@ -5,11 +5,15 @@ import SanghyukChat from '@/components/apps/instagram/SanghyukChat';
 import { useDmStore } from '@/hooks/useDmStore';
 import { requestDmCallback, type DmCallbackKey, type DmMessage, type DmThread } from '@/lib/dmChat';
 import { useGameState } from '@/state/GameState';
+import { openConsult, type ConsultRoom } from '@/state/consults';
+import { chooseConsult } from '@/state/kakaoActions';
+import { kakaoAt } from '@/state/kakaoEvents';
 import { applyDmEffects, arriveDmNotice, openDmThread, openSanghyukRoom, sendDm } from '@/state/runState';
-import { dmThreads as threadData } from '@data/instagram';
+import { dmThreads as threadData, personalHistory } from '@data/instagram';
 
 const dmThreads = threadData as DmThread[];
 const CALLBACK_KEYS: DmCallbackKey[] = ['erasedThrice', 'dndNight'];
+const CONSULT_ROOMS: string[] = ['donghyun', 'jaehyun'];
 
 function threadNameOf(threadId: string) {
   return dmThreads.find((thread) => thread.id === threadId)?.name ?? '';
@@ -24,6 +28,20 @@ export default function InstagramDm({ initialThreadId }: Props) {
 
   const active = dmThreads.find((thread) => thread.id === activeId) ?? null;
   const { refresh } = store;
+  const consultOpen = openConsult(run.consult, run.t) !== null;
+
+  function messagesOf(thread: DmThread): DmMessage[] {
+    const scripted: DmMessage[] = [
+      ...(personalHistory[thread.id as keyof typeof personalHistory] ?? []),
+      ...run.kakaoAdded.filter((message) => message.room === thread.id),
+    ].map((message) => ({
+      from: message.from === 'me' ? 'me' : 'them',
+      text: message.text ?? '',
+      time: message.time,
+      at: kakaoAt(message.date, message.time),
+    }));
+    return [...store.messagesFor(thread), ...scripted].sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
+  }
 
   useEffect(() => {
     const pending = CALLBACK_KEYS.filter((key) => run.morning[key]);
@@ -92,11 +110,13 @@ export default function InstagramDm({ initialThreadId }: Props) {
     return (
       <ChatView
         thread={active}
-        messages={store.messagesFor(active)}
+        messages={messagesOf(active)}
         status={store.status}
         typing={store.typingId === active.id}
         locked={store.pendingId !== null}
         notice={store.notice?.threadId === active.id ? store.notice.text : null}
+        consultOpen={consultOpen && CONSULT_ROOMS.includes(active.id)}
+        onConsult={() => update((current) => chooseConsult(current, active.id as ConsultRoom))}
         onBack={() => setActiveId(null)}
         onSend={(text) =>
           void store.send(active, text, {
@@ -116,7 +136,7 @@ export default function InstagramDm({ initialThreadId }: Props) {
       </header>
       <ul className="flex flex-1 flex-col overflow-y-auto pan-y-scroll">
         {dmThreads.map((thread) => {
-          const last = [...store.messagesFor(thread)].reverse().find((message) => message.from !== 'system');
+          const last = [...messagesOf(thread)].reverse().find((message) => message.from !== 'system');
           return (
             <li key={thread.id}>
               <button
@@ -148,12 +168,15 @@ type ChatProps = {
   typing: boolean;
   locked: boolean;
   notice: string | null;
+  consultOpen: boolean;
+  onConsult: () => void;
   onBack: () => void;
   onSend: (text: string) => void;
 };
 
-function ChatView({ thread, messages, status, typing, locked, notice, onBack, onSend }: ChatProps) {
+function ChatView({ thread, messages, status, typing, locked, notice, consultOpen, onConsult, onBack, onSend }: ChatProps) {
   const [draft, setDraft] = useState('');
+  const [consultDismissed, setConsultDismissed] = useState(false);
   const inputLocked = status !== 'ready' || locked;
 
   function submit() {
@@ -175,6 +198,18 @@ function ChatView({ thread, messages, status, typing, locked, notice, onBack, on
           <p className="text-[11px] text-[var(--fg-2)]">{typing ? '입력 중' : thread.activity}</p>
         </div>
       </header>
+
+      {consultOpen && !consultDismissed && (
+        <div className="mx-3 mt-2 flex items-center gap-2 rounded-[12px] border border-[var(--line)] bg-[var(--card)] px-3 py-2.5">
+          <p className="min-w-0 flex-1 text-[13px] leading-[1.4] text-[var(--fg)]">오늘 밤 상담 받을래요?</p>
+          <button type="button" onClick={() => setConsultDismissed(true)} className="h-8 px-2 text-[12px] text-[var(--fg-2)]">
+            나중에
+          </button>
+          <button type="button" onClick={onConsult} className="h-8 rounded-full bg-[#0A84FF] px-3 text-[12px] font-semibold text-white">
+            상담 받기
+          </button>
+        </div>
+      )}
 
       <div className="pan-y-scroll flex flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-3">
         {status === 'loading' && <p className="my-2 text-center text-[11px] text-[var(--fg-2)]">대화를 불러오는 중이에요</p>}

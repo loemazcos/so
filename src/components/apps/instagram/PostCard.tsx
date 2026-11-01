@@ -73,12 +73,12 @@ export default function PostCard({
       </header>
 
       {post.kind === 'deleted' ? (
-        <div className="mx-3 flex aspect-square items-center justify-center rounded-[14px] bg-[var(--card)] text-[13px] text-[var(--fg-2)]">
+        <div className="mx-3 flex aspect-[4/3] items-center justify-center rounded-[14px] bg-[var(--card)] text-[13px] text-[var(--fg-2)]">
           삭제된 게시물입니다
         </div>
       ) : (
         <div
-          className={`mx-3 flex aspect-square items-center justify-center overflow-hidden rounded-[14px] p-6 ${mediaInk}`}
+          className={`mx-3 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[14px] p-6 ${mediaInk}`}
           style={{ backgroundImage: `linear-gradient(160deg, ${post.tone[0]}, ${post.tone[1]})` }}
         >
           {isNotice && <p className="text-center text-[15px] leading-[1.6]">{post.caption}</p>}

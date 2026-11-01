@@ -61,17 +61,17 @@ export default function InstagramFeed({ onOpenRumor, onOpenStory }: Props) {
 
   return (
     <div ref={root} className="pan-y-scroll flex-1 overflow-y-auto overscroll-contain pb-10">
-      <div className="flex gap-3 overflow-x-auto px-3 py-3">
-        <div className="flex w-16 shrink-0 flex-col items-center gap-1">
-          <Avatar photo={null} label="태산" size={56} />
-          <span className="text-[11px] text-[var(--fg-2)]">내 스토리</span>
+      <div className="sticky top-0 z-10 flex gap-3 overflow-x-auto border-b border-[var(--line)] bg-[var(--bg)] px-3 py-2.5">
+        <div className="flex w-14 shrink-0 flex-col items-center gap-0.5">
+          <Avatar photo={null} label="태산" size={48} />
+          <span className="text-[10px] text-[var(--fg-2)]">내 스토리</span>
         </div>
         <button
           type="button"
           onClick={onOpenStory}
           disabled={!sanghyukNight}
           aria-label="상혁 스토리 보기"
-          className="flex w-16 shrink-0 flex-col items-center gap-1 transition-opacity disabled:opacity-40"
+          className="flex w-14 shrink-0 flex-col items-center gap-0.5 transition-opacity disabled:opacity-40"
         >
           <span
             className={`rounded-full p-[2.5px] ${
@@ -79,10 +79,10 @@ export default function InstagramFeed({ onOpenRumor, onOpenStory }: Props) {
             }`}
           >
             <span className="block rounded-full border-2 border-[var(--bg,#fff)]">
-              <Avatar photo="상혁" label={SANGHYUK_HANDLE} size={52} />
+              <Avatar photo="상혁" label={SANGHYUK_HANDLE} size={44} />
             </span>
           </span>
-          <span className="text-[11px] text-[var(--fg-2)]">{SANGHYUK_HANDLE}</span>
+          <span className="text-[10px] text-[var(--fg-2)]">{SANGHYUK_HANDLE}</span>
         </button>
       </div>
 

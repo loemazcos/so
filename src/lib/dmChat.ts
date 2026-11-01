@@ -1,7 +1,7 @@
 import { callFunction } from '@/lib/gameApi';
 
 export type DmSender = 'me' | 'them' | 'system';
-export type DmMessage = { id?: number; from: DmSender; text: string; time?: string; read?: boolean };
+export type DmMessage = { id?: number; from: DmSender; text: string; time?: string; read?: boolean; at?: number };
 export type DmThread = { id: string; name: string; handle: string; avatar: string; activity: string; messages: DmMessage[] };
 
 export type DmRow = {
@@ -40,7 +40,7 @@ export function rowToMessage(row: DmRow, threadName: string): DmMessage {
   if (row.status === 'unsent') {
     return { id: row.id, from: 'system', text: `${threadName}님이 메시지를 전송 취소했습니다`, time };
   }
-  return { id: row.id, from: row.sender, text: row.body, time, read: row.sender === 'me' && row.status === 'read' };
+  return { id: row.id, from: row.sender, text: row.body, time, read: row.sender === 'me' && row.status === 'read', at: row.deliver_at };
 }
 
 function isDmRow(value: unknown): value is DmRow {

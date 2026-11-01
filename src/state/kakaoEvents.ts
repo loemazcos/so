@@ -1,4 +1,5 @@
 import { kakaoRooms, type KakaoMessage } from '@/lib/kakao';
+import { dmThreads } from '@data/instagram';
 import type { RunState } from '@/state/runState';
 import { dayIndex, parseClock } from '@/state/social';
 import { clampStat } from '@/state/stats';
@@ -27,29 +28,38 @@ type NewKakaoMessage = {
   options?: { label: string; votes: number }[];
 };
 
+export const PERSONAL_ROOM_IDS: string[] = ['donghyun', 'jaehyun', 'seongho'];
+
 export function kakaoDate(t: number): string {
   return `2026-10-${String(13 + dayIndex(t)).padStart(2, '0')}`;
 }
 
+export function kakaoAt(date: string, time: string): number {
+  const day = Number(date.slice(-2)) - 13;
+  return (day - 1) * DAY_MIN + parseClock(time);
+}
+
 function roomName(roomId: string): string {
-  return kakaoRooms.find((room) => room.id === roomId)?.name ?? roomId;
+  return kakaoRooms.find((room) => room.id === roomId)?.name ?? dmThreads.find((thread) => thread.id === roomId)?.name ?? roomId;
 }
 
 export function addKakaoMessage(run: RunState, message: NewKakaoMessage, at: number): RunState {
   const time = clockOf(at);
   const entry: KakaoAddition = { ...message, date: kakaoDate(at), time };
+  const personal = PERSONAL_ROOM_IDS.includes(message.room);
   const notice: Notice[] =
     message.from === 'me'
       ? []
       : [
           {
             id: `kakao-${message.id}`,
-            appId: 'kakao',
+            appId: personal ? 'insta' : 'kakao',
             title: roomName(message.room),
             body: message.text,
             time,
             arriveAt: at,
             queued: run.dnd,
+            threadId: personal ? message.room : undefined,
           },
         ];
   return { ...run, kakaoAdded: [...run.kakaoAdded, entry], notices: [...run.notices, ...notice] };

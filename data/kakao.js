@@ -1,45 +1,14 @@
 /*
- * 카카오톡 대화방 데이터
+ * 카카오톡 대화방 데이터 (그룹방과 나와의 채팅만)
+ * - 1:1 대화는 인스타 DM에 있습니다 (data/instagram.js의 personalHistory).
  * - id: 방 이름표 (바꾸지 마세요)
- * - memberCount: 대화방 인원 수 (1:1 방은 2)
+ * - memberCount: 대화방 인원 수
  * - unread: 안 읽은 메시지 수
  * - messages: 대화 내용. from은 보낸 사람 이름, 'me'는 태산입니다.
  * - type: text(일반) / notice(공지) / deleted(삭제된 메시지)
  * - 따옴표 안의 글자만 고치세요. 쉼표(,)와 중괄호({ })는 지우지 마세요.
  */
 export const kakaoRooms = [
-  {
-    id: 'donghyun',
-    name: '동현',
-    memberCount: 2,
-    unread: 6,
-    messages: [
-      { id: 'k-d01', date: '2026-10-14', time: '19:02', from: '동현', type: 'text', text: '형 병원 갔다 학교 온 거 ㄹㅇ 대박임' },
-      { id: 'k-d02', date: '2026-10-14', time: '19:03', from: '동현', type: 'text', text: '얼굴 빨개서 옴 ㅋㅋㅋㅋ' },
-      { id: 'k-d03', date: '2026-10-14', time: '19:05', from: '동현', type: 'text', text: '아프다면서 왜 왔냐니까 형이 누가 보고싶어서래' },
-      { id: 'k-d04', date: '2026-10-14', time: '19:06', from: '동현', type: 'text', text: 'ㅋㅋㅋㅋㅋㅋ 누구겠냐' },
-      { id: 'k-d05', date: '2026-10-14', time: '19:07', from: '동현', type: 'text', text: '병원은 그냥 좀 아파서 갔다는데 무슨 병원인지는 말 안 해 줌' },
-      { id: 'k-d06', date: '2026-10-14', time: '20:15', from: '동현', type: 'text', text: '근데 형 생일 D-8인데 뭐 줌ㅋㅋ' },
-    ],
-  },
-  {
-    id: 'jaehyun',
-    name: '재현',
-    memberCount: 2,
-    unread: 1,
-    messages: [
-      { id: 'k-j01', date: '2026-10-14', time: '12:41', from: '재현', type: 'text', text: '상혁 오늘 얼굴이 많이 빨갰다. 열이 있는 건지 모르겠다.' },
-    ],
-  },
-  {
-    id: 'seongho',
-    name: '성호',
-    memberCount: 2,
-    unread: 1,
-    messages: [
-      { id: 'k-s01', date: '2026-10-14', time: '13:20', from: '성호', type: 'text', text: '상혁이 너 연락 보라던데. 봤냐.' },
-    ],
-  },
   {
     id: 'class',
     name: '1학년 3반',

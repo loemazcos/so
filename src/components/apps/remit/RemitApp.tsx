@@ -17,7 +17,7 @@ export default function RemitApp() {
 
   return (
     <div className="flex h-full flex-col bg-[var(--bg)] px-4 pb-8 pt-[calc(env(safe-area-inset-top)+58px)] text-[var(--fg)]">
-      <p className="text-[26px] font-bold leading-[1.2]">쏘머니</p>
+      <p className="text-[26px] font-bold leading-[1.2]">토스</p>
       <section className="mt-6 flex flex-col gap-4 rounded-[24px] bg-[var(--card)] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--key-pressed)]">

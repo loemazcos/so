@@ -39,10 +39,6 @@ export default function LockScreen({ now, onUnlock }: Props) {
           <p className="text-[12px] text-[var(--fg-2)]">{device.dday.title}</p>
           <p className="mt-1 text-[22px] font-bold leading-none">{device.dday.label}</p>
         </div>
-        <div className="flex flex-1 flex-col rounded-[20px] bg-[var(--glass)] p-3.5 backdrop-blur-[24px] backdrop-saturate-[180%]">
-          <p className="text-[12px] text-[var(--fg-2)]">{device.weather.place}</p>
-          <p className="mt-1 text-[22px] font-light leading-none tabular-nums">{device.weather.temp}° · {device.weather.summary}</p>
-        </div>
       </div>
 
       <div className={`mx-4 mt-6 flex flex-col gap-2 ${padOpen ? 'hidden' : ''}`}>

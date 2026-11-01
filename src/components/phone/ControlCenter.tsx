@@ -135,7 +135,7 @@ export default function ControlCenter({ progress, dragging, onClose, dnd, onTogg
           </span>
           <span className="flex-1">
             <span className="block text-[14px] font-semibold">재생 중인 곡 없음</span>
-            <span className="block text-[12px] text-[var(--fg-2)]">뮤직 앱에서 재생하면 여기 보여요</span>
+            <span className="block text-[12px] text-[var(--fg-2)]">스포티파이 앱에서 재생하면 여기 보여요</span>
           </span>
           <button type="button" aria-label="재생" className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--key)]">
             <Play size={16} strokeWidth={1.8} aria-hidden="true" />

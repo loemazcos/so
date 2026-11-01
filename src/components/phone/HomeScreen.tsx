@@ -86,6 +86,7 @@ export default function HomeScreen({
   return (
     <div
       className="absolute inset-0 overflow-hidden"
+      style={{ touchAction: 'pan-y' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

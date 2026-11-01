@@ -13,7 +13,6 @@ export const device = {
   maxPasscodeTries: 5,
   lockoutSeconds: 60,
   dday: { label: 'D-8', title: '비공개 일정' },
-  weather: { place: '보넥동', temp: 18, summary: '흐림' },
   steps: 3412,
   badges: { insta: 1, kakao: 8, remit: 1 },
   lockNotifications: [

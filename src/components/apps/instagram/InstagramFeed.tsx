@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Heart, Send } from 'lucide-react';
 import Avatar from '@/components/apps/Avatar';
 import PostCard, { type PostData } from '@/components/apps/instagram/PostCard';
 import { useGameState } from '@/state/GameState';
@@ -61,28 +62,36 @@ export default function InstagramFeed({ onOpenRumor, onOpenStory }: Props) {
 
   return (
     <div ref={root} className="pan-y-scroll flex-1 overflow-y-auto overscroll-contain pb-10">
-      <div className="sticky top-0 z-10 flex gap-3 overflow-x-auto border-b border-[var(--line)] bg-[var(--bg)] px-3 py-2.5">
-        <div className="flex w-14 shrink-0 flex-col items-center gap-0.5">
-          <Avatar photo={null} label="태산" size={48} />
-          <span className="text-[10px] text-[var(--fg-2)]">내 스토리</span>
+      <header className="sticky top-0 z-20 flex items-center justify-between bg-[var(--bg)] px-4 pb-2 pt-[calc(env(safe-area-inset-top)+58px)]">
+        <span className="text-[24px] font-bold tracking-[-0.5px]">Instagram</span>
+        <div className="flex items-center gap-4 text-[var(--fg)]">
+          <Heart size={24} strokeWidth={1.8} aria-hidden="true" />
+          <Send size={24} strokeWidth={1.8} aria-hidden="true" />
+        </div>
+      </header>
+
+      <div className="flex gap-4 overflow-x-auto border-b border-[var(--line)] bg-[var(--bg)] px-4 py-4">
+        <div className="flex w-[72px] shrink-0 flex-col items-center gap-1.5">
+          <Avatar photo={null} label="태산" size={64} />
+          <span className="max-w-full truncate text-[12px] text-[var(--fg)]">내 스토리</span>
         </div>
         <button
           type="button"
           onClick={onOpenStory}
           disabled={!sanghyukNight}
           aria-label="상혁 스토리 보기"
-          className="flex w-14 shrink-0 flex-col items-center gap-0.5 transition-opacity disabled:opacity-40"
+          className="flex w-[72px] shrink-0 flex-col items-center gap-1.5 transition-opacity disabled:opacity-40"
         >
           <span
-            className={`rounded-full p-[2.5px] ${
+            className={`rounded-full p-[3px] ${
               sanghyukNight ? 'bg-[linear-gradient(45deg,#FBC17D,#E0457B)]' : 'bg-[var(--line)]'
             }`}
           >
             <span className="block rounded-full border-2 border-[var(--bg,#fff)]">
-              <Avatar photo="상혁" label={SANGHYUK_HANDLE} size={44} />
+              <Avatar photo="상혁" label={SANGHYUK_HANDLE} size={58} />
             </span>
           </span>
-          <span className="text-[10px] text-[var(--fg-2)]">{SANGHYUK_HANDLE}</span>
+          <span className="max-w-full truncate text-[12px] text-[var(--fg)]">{SANGHYUK_HANDLE}</span>
         </button>
       </div>
 

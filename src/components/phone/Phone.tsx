@@ -1,16 +1,43 @@
-import { useRef, useState, type PointerEvent } from 'react';
+import { useCallback, useRef, useState, type PointerEvent } from 'react';
 import { apps } from '@data/apps.config';
+import { cuts } from '@data/story/cuts';
+import { questions, defaultQuestion } from '@data/story/questions';
 import AppSwitcher from '@/components/phone/AppSwitcher';
 import AppWindow from '@/components/phone/AppWindow';
+import BootScreen from '@/components/phone/BootScreen';
+import ClassOverlay from '@/components/phone/ClassOverlay';
 import ControlCenter from '@/components/phone/ControlCenter';
+import DayCutOverlay from '@/components/phone/DayCutOverlay';
 import HomeScreen from '@/components/phone/HomeScreen';
 import LockScreen from '@/components/phone/LockScreen';
 import NotificationCenter from '@/components/phone/NotificationCenter';
+import SleepSheet from '@/components/phone/SleepSheet';
 import Spotlight from '@/components/phone/Spotlight';
 import StatusBar from '@/components/phone/StatusBar';
+import TypingCutBanner from '@/components/phone/TypingCutBanner';
 import Wallpaper from '@/components/phone/Wallpaper';
 import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
+import { remainingMinutes } from '@/lib/remit';
+import { useGameState } from '@/state/GameState';
+import {
+  finishBoot,
+  finishSleep,
+  goToSleep,
+  markNightCutPlayed,
+  advanceRun,
+  openApp as runOpenApp,
+  setDnd,
+} from '@/state/runState';
+import {
+  LOW_BATTERY_LINE,
+  LOW_POWER_LINE,
+  SLEEP_FROM,
+  clockOf,
+  minutesIntoDay,
+  minutesUntilNextBreak,
+  phaseOf,
+} from '@/state/timeline';
 import type { AppConfig, Rect } from '@/lib/types';
 
 type SheetKind = 'nc' | 'cc' | 'spot';
@@ -42,6 +69,7 @@ function resolveKind(zone: Gesture['zone'], dy: number, side: 'nc' | 'cc'): Gest
 
 export default function Phone() {
   const now = useGameClock();
+  const { run, update } = useGameState();
   const screenRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const [locked, setLocked] = useState(true);
@@ -52,6 +80,28 @@ export default function Phone() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
+  const [sleepOpen, setSleepOpen] = useState(false);
+  const [seenDay, setSeenDay] = useState(run.day);
+  const [cutDay, setCutDay] = useState<number | null>(null);
+
+  if (run.day !== seenDay) {
+    setSeenDay(run.day);
+    setCutDay(run.day - 1);
+  }
+  const cut = cutDay === null ? null : cuts.find((item) => item.day === cutDay) ?? null;
+
+  const phase = phaseOf(run);
+  const inClass = phase === 'school' && !run.booted;
+  const canSleep = minutesIntoDay(run) >= SLEEP_FROM && !run.booted;
+  const remitMinutes = remainingMinutes(run.t);
+  const remitPulsing = run.remitStatus === 'open' && remitMinutes < 30;
+  const dimmed = !run.charging && run.battery <= LOW_POWER_LINE;
+  const lowBattery = !run.charging && run.battery <= LOW_BATTERY_LINE;
+  const sleepQuestion = questions[run.day as keyof typeof questions] ?? defaultQuestion;
+
+  const finishBootScreen = useCallback(() => update(finishBoot), [update]);
+  const clearDayCut = useCallback(() => setCutDay(null), []);
+  const finishTypingCut = useCallback(() => update(markNightCutPlayed), [update]);
 
   const dark = isNightTime(now);
   const recentApps = recentIds.flatMap((id) => apps.filter((app) => app.id === id));
@@ -67,6 +117,7 @@ export default function Phone() {
   }
 
   function openApp(app: AppConfig, target: DOMRect) {
+    update(runOpenApp);
     setEditing(false);
     setSwitcherOpen(false);
     setOpenState({ app, origin: toScreenRect(target), closing: false });
@@ -214,7 +265,13 @@ export default function Phone() {
           now={now}
           onClose={() => setSheet(null)}
         />
-        <ControlCenter progress={progressOf('cc')} dragging={drag !== null} onClose={() => setSheet(null)} />
+        <ControlCenter
+          progress={progressOf('cc')}
+          dragging={drag !== null}
+          onClose={() => setSheet(null)}
+          dnd={run.dnd}
+          onToggleDnd={() => update((current) => setDnd(current, !current.dnd))}
+        />
         <Spotlight
           progress={progressOf('spot')}
           dragging={drag !== null}
@@ -223,6 +280,57 @@ export default function Phone() {
         />
 
         {locked ? <LockScreen now={now} onUnlock={() => setLocked(false)} /> : null}
+
+        {!locked && inClass ? (
+          <ClassOverlay
+            nextBreak={clockOf(run.t + minutesUntilNextBreak(run))}
+            onWait={() => update((current) => advanceRun(current, minutesUntilNextBreak(current), 0))}
+          />
+        ) : null}
+
+        {!locked && canSleep && !sleepOpen && !inClass ? (
+          <button
+            type="button"
+            onClick={() => setSleepOpen(true)}
+            className="absolute left-1/2 top-[calc(env(safe-area-inset-top)+64px)] z-[54] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[var(--glass)] px-4 py-2 text-[13px] font-semibold text-[var(--fg)] backdrop-blur-[24px] transition-transform active:scale-95"
+          >
+            잠들기
+          </button>
+        ) : null}
+
+        {!locked && sleepOpen ? (
+          <SleepSheet
+            question={sleepQuestion}
+            clueCount={run.clues.length}
+            ignores={run.ignores}
+            onClose={() => setSleepOpen(false)}
+            onSleep={(charging) => {
+              setSleepOpen(false);
+              update((current) => finishSleep(goToSleep(current, charging)));
+            }}
+          />
+        ) : null}
+
+        {!locked && lowBattery ? (
+          <p className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+104px)] z-[54] text-center text-[12px] font-semibold text-[#FF3B30]">
+            배터리 {run.battery}%
+          </p>
+        ) : null}
+
+        {remitPulsing ? (
+          <div
+            className="phone-edge-pulse pointer-events-none absolute inset-0 z-[58] rounded-[52px]"
+            style={{ animationDuration: remitMinutes < 10 ? '0.5s' : '0.9s' }}
+          />
+        ) : null}
+
+        {dimmed ? <div className="pointer-events-none absolute inset-0 z-[57] bg-black/25" /> : null}
+
+        {!locked && run.nightCutPending && !run.nightCutPlayed ? <TypingCutBanner onDone={finishTypingCut} /> : null}
+
+        {cut ? <DayCutOverlay key={cut.day} text={cut.text} onDone={clearDayCut} /> : null}
+
+        {run.booted ? <BootScreen onDone={finishBootScreen} /> : null}
 
         <StatusBar now={now} />
 

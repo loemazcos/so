@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { device } from '@data/device';
 import NotificationItem from '@/components/phone/NotificationItem';
 import { formatClock, formatLockDate } from '@/lib/gameTime';
+import { useVisibleNotices } from '@/hooks/useVisibleNotices';
+import { useGameState } from '@/state/GameState';
+import { clearNotifications } from '@/state/runState';
 
 type Props = {
   progress: number;
@@ -11,7 +12,8 @@ type Props = {
 };
 
 export default function NotificationCenter({ progress, dragging, now, onClose }: Props) {
-  const [items, setItems] = useState(device.lockNotifications);
+  const items = useVisibleNotices();
+  const { update } = useGameState();
   const hidden = progress === 0 && !dragging;
 
   return (
@@ -32,7 +34,7 @@ export default function NotificationCenter({ progress, dragging, now, onClose }:
           {items.length > 0 ? (
             <button
               type="button"
-              onClick={() => setItems([])}
+              onClick={() => update(clearNotifications)}
               className="h-9 rounded-full px-3 text-[14px] text-[var(--accent)]"
             >
               모두 지우기
@@ -45,7 +47,7 @@ export default function NotificationCenter({ progress, dragging, now, onClose }:
           ) : (
             items.map((item) => (
               <li key={item.id}>
-                <NotificationItem appId={item.app} title={item.title} body={item.body} time={item.time} />
+                <NotificationItem appId={item.appId} title={item.title} body={item.body} time={item.time} />
               </li>
             ))
           )}

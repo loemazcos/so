@@ -46,6 +46,7 @@ export const posts = [
     comments: [
       { handle: 'nightwalk_k', text: '저도 봤어요. 11시쯤이었던 것 같아요.' },
       { handle: 'sunny_2nd', text: '누가 올렸는지가 더 궁금하다' },
+      { handle: 'hyun_pic', text: '그 시간에 체육관 쪽 불 본 사람 또 있어요?' },
     ],
   },
   {
@@ -202,10 +203,13 @@ export const dmThreads = [
     activity: '활동 중',
     messages: [
       { from: 'system', text: '과거 상담 기록' },
-      { from: 'me', text: '나 상담 받았는데 좀 이상해', time: '어제 23:10' },
-      { from: 'them', text: '무슨 얘기?', time: '어제 23:12' },
-      { from: 'me', text: '그냥… 누가 나를 보고 있었던 것 같아', time: '어제 23:14' },
-      { from: 'them', text: '그건 나중에 얘기하자', time: '어제 23:20' },
+      { from: 'system', text: '10월 3일' },
+      { from: 'me', text: '선배 잠깐 얘기해도 돼요?', time: '22:40' },
+      { from: 'them', text: '응. 무슨 일인데', time: '22:41' },
+      { from: 'me', text: '연애상담을 받았어요. 나한테', time: '22:44' },
+      { from: 'them', text: '… 그래서 뭐라고 했는데', time: '22:49' },
+      { from: 'system', text: '10월 7일' },
+      { from: 'them', text: '잠 안 와서. 자?', time: '04:12' },
       { from: 'system', text: '오늘' },
       { from: 'them', text: '너 웃는 거 예쁘더라', time: '21:47' },
     ],

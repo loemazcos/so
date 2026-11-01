@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { ChevronLeft, Send } from 'lucide-react';
 import Avatar from '@/components/apps/Avatar';
+import SanghyukChat from '@/components/apps/instagram/SanghyukChat';
 import { useDmStore } from '@/hooks/useDmStore';
 import { type DmMessage, type DmThread } from '@/lib/dmChat';
+import { useGameState } from '@/state/GameState';
+import { openDm, openSanghyukRoom, sendDm } from '@/state/runState';
 import { dmThreads as threadData } from '@data/instagram';
 
 const dmThreads = threadData as DmThread[];
@@ -11,9 +14,22 @@ type Props = { onBack: () => void };
 
 export default function InstagramDm({ onBack }: Props) {
   const store = useDmStore();
+  const { update } = useGameState();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const active = dmThreads.find((thread) => thread.id === activeId) ?? null;
+
+  function openThread(thread: DmThread) {
+    update((run) => {
+      const opened = openDm(run);
+      return thread.id === 'sanghyuk' ? openSanghyukRoom(opened) : opened;
+    });
+    setActiveId(thread.id);
+  }
+
+  if (active?.id === 'sanghyuk') {
+    return <SanghyukChat thread={active} onBack={() => setActiveId(null)} />;
+  }
 
   if (active) {
     return (
@@ -24,7 +40,10 @@ export default function InstagramDm({ onBack }: Props) {
         typing={store.pendingId === active.id}
         notice={store.notice?.threadId === active.id ? store.notice.text : null}
         onBack={() => setActiveId(null)}
-        onSend={(text) => store.send(active, text)}
+        onSend={(text) => {
+          update(sendDm);
+          void store.send(active, text);
+        }}
       />
     );
   }
@@ -45,7 +64,7 @@ export default function InstagramDm({ onBack }: Props) {
             <li key={thread.id}>
               <button
                 type="button"
-                onClick={() => setActiveId(thread.id)}
+                onClick={() => openThread(thread)}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--card)]"
               >
                 <Avatar photo={thread.avatar} label={thread.name} size={52} />

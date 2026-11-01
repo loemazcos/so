@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import PostCard, { type PostData, type PostState } from '@/components/apps/instagram/PostCard';
+import { useGameState } from '@/state/GameState';
+import { openFeedPage } from '@/state/runState';
 import { posts as postData } from '@data/instagram';
 
 const posts = postData as PostData[];
@@ -11,6 +13,7 @@ function initialStates(): Record<string, PostState> {
 }
 
 export default function InstagramFeed() {
+  const { update } = useGameState();
   const [states, setStates] = useState(initialStates);
   const [visible, setVisible] = useState(PAGE_STEP);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -22,6 +25,7 @@ export default function InstagramFeed() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
+          update(openFeedPage);
           setVisible((count) => Math.min(count + PAGE_STEP, posts.length));
         }
       },
@@ -29,7 +33,7 @@ export default function InstagramFeed() {
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [update]);
 
   function updateState(id: string, change: (state: PostState) => PostState) {
     setStates((current) => ({ ...current, [id]: change(current[id]) }));

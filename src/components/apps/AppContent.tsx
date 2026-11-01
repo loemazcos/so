@@ -3,6 +3,9 @@ import AppGlyph from '@/components/phone/AppGlyph';
 import KakaoApp from '@/components/apps/kakao/KakaoApp';
 import CalendarApp from '@/components/apps/calendar/CalendarApp';
 import InstagramApp from '@/components/apps/instagram/InstagramApp';
+import MemoApp from '@/components/apps/memo/MemoApp';
+import RemitApp from '@/components/apps/remit/RemitApp';
+import SettingsApp from '@/components/apps/settings/SettingsApp';
 import type { AppConfig } from '@/lib/types';
 
 type Props = { app: AppConfig };
@@ -11,6 +14,9 @@ export default function AppContent({ app }: Props) {
   if (app.id === 'insta') return <InstagramApp />;
   if (app.id === 'kakao') return <KakaoApp />;
   if (app.id === 'calendar') return <CalendarApp />;
+  if (app.id === 'memo') return <MemoApp />;
+  if (app.id === 'remit') return <RemitApp />;
+  if (app.id === 'settings') return <SettingsApp />;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 bg-[var(--bg)] px-8 text-center text-[var(--fg)]">
       <AppGlyph app={app} size={96} />

@@ -3,6 +3,7 @@ import { Camera, Flashlight } from 'lucide-react';
 import { device } from '@data/device';
 import NotificationItem from '@/components/phone/NotificationItem';
 import PasscodePad from '@/components/phone/PasscodePad';
+import { useVisibleNotices } from '@/hooks/useVisibleNotices';
 import { formatClock, formatLockDate } from '@/lib/gameTime';
 
 type Props = { now: Date; onUnlock: () => void };
@@ -11,7 +12,7 @@ export default function LockScreen({ now, onUnlock }: Props) {
   const [padOpen, setPadOpen] = useState(false);
   const [stackOpen, setStackOpen] = useState(false);
   const [swipeStartY, setSwipeStartY] = useState<number | null>(null);
-  const notifications = device.lockNotifications;
+  const notifications = useVisibleNotices();
   const [top, ...rest] = notifications;
 
   function finishSwipe(clientY: number) {
@@ -50,7 +51,7 @@ export default function LockScreen({ now, onUnlock }: Props) {
             {stackOpen ? (
               <div className="flex flex-col gap-2">
                 {notifications.map((item) => (
-                  <NotificationItem key={item.id} appId={item.app} title={item.title} body={item.body} time={item.time} />
+                  <NotificationItem key={item.id} appId={item.appId} title={item.title} body={item.body} time={item.time} />
                 ))}
               </div>
             ) : (
@@ -59,7 +60,7 @@ export default function LockScreen({ now, onUnlock }: Props) {
                   <span className="absolute inset-x-3 -bottom-1.5 h-full rounded-[20px] bg-[var(--glass)] opacity-60" />
                 ) : null}
                 <div className="relative">
-                  <NotificationItem appId={top.app} title={top.title} body={top.body} time={top.time} />
+                  <NotificationItem appId={top.appId} title={top.title} body={top.body} time={top.time} />
                 </div>
                 <p className="mt-3 text-center text-[13px] text-[var(--fg)]">알림 {notifications.length}개 모두 보기</p>
               </div>

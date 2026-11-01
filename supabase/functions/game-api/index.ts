@@ -47,7 +47,7 @@ function requireDate(value: unknown): string {
 }
 
 async function loadState(supabase: ReturnType<typeof createClient>, deviceId: string) {
-  const [dm, calendar] = await Promise.all([
+  const [dm, calendar, run] = await Promise.all([
     supabase
       .from("dm_messages")
       .select("thread_id, sender, body, created_at")
@@ -59,9 +59,25 @@ async function loadState(supabase: ReturnType<typeof createClient>, deviceId: st
       .eq("device_id", deviceId)
       .order("event_date", { ascending: true })
       .order("start_time", { ascending: true, nullsFirst: true }),
+    supabase.from("game_state").select("run").eq("device_id", deviceId).maybeSingle(),
   ]);
-  if (dm.error || calendar.error) throw new Error("load failed");
-  return { dmMessages: dm.data ?? [], calendarEvents: calendar.data ?? [] };
+  if (dm.error || calendar.error || run.error) throw new Error("load failed");
+  return {
+    dmMessages: dm.data ?? [],
+    calendarEvents: calendar.data ?? [],
+    gameState: run.data?.run ?? null,
+  };
+}
+
+async function saveState(supabase: ReturnType<typeof createClient>, deviceId: string, payload: Record<string, unknown>) {
+  const run = payload.run;
+  if (typeof run !== "object" || run === null || Array.isArray(run)) throw new BadRequest();
+  if (JSON.stringify(run).length > 100_000) throw new BadRequest();
+  const { error } = await supabase
+    .from("game_state")
+    .upsert({ device_id: deviceId, run, updated_at: new Date().toISOString() });
+  if (error) throw new Error("save failed");
+  return { ok: true };
 }
 
 async function sendDm(supabase: ReturnType<typeof createClient>, deviceId: string, payload: Record<string, unknown>) {
@@ -119,6 +135,8 @@ Deno.serve(async (req: Request) => {
         return json(await sendDm(supabase, deviceId, payload));
       case "saveCalendarEvent":
         return json(await saveCalendarEvent(supabase, deviceId, payload));
+      case "saveState":
+        return json(await saveState(supabase, deviceId, payload));
       default:
         return json({ error: "잘못된 요청이에요." }, 400);
     }

@@ -39,13 +39,14 @@ type Props = {
   progress: number;
   dragging: boolean;
   onClose: () => void;
+  dnd: boolean;
+  onToggleDnd: () => void;
 };
 
-export default function ControlCenter({ progress, dragging, onClose }: Props) {
+export default function ControlCenter({ progress, dragging, onClose, dnd, onToggleDnd }: Props) {
   const [on, setOn] = useState<Record<string, boolean>>(() =>
     Object.fromEntries([...CONNECTIVITY, ...ROUND_TOOLS].map((item) => [item.id, item.on]))
   );
-  const [focusOn, setFocusOn] = useState(false);
   const [rotationLock, setRotationLock] = useState(true);
   const [brightness, setBrightness] = useState(70);
   const [volume, setVolume] = useState(45);
@@ -76,16 +77,16 @@ export default function ControlCenter({ progress, dragging, onClose }: Props) {
           <div className="flex flex-col gap-3">
             <button
               type="button"
-              aria-pressed={focusOn}
-              onClick={() => setFocusOn((value) => !value)}
+              aria-pressed={dnd}
+              onClick={onToggleDnd}
               className="flex flex-1 items-center gap-3 rounded-[22px] bg-[var(--card)] p-4 text-left transition-transform active:scale-[0.98]"
             >
-              <span className={`flex h-10 w-10 items-center justify-center rounded-full ${focusOn ? 'bg-[var(--accent)] text-white' : 'bg-[var(--key-pressed)] text-[var(--fg)]'}`}>
+              <span className={`flex h-10 w-10 items-center justify-center rounded-full ${dnd ? 'bg-[var(--accent)] text-white' : 'bg-[var(--key-pressed)] text-[var(--fg)]'}`}>
                 <Moon size={20} strokeWidth={1.8} aria-hidden="true" />
               </span>
               <span>
-                <span className="block text-[15px] font-semibold">집중 모드</span>
-                <span className="block text-[12px] text-[var(--fg-2)]">{focusOn ? '켜짐' : '꺼짐'}</span>
+                <span className="block text-[15px] font-semibold">방해금지</span>
+                <span className="block text-[12px] text-[var(--fg-2)]">{dnd ? '켜짐' : '꺼짐'}</span>
               </span>
             </button>
             <button

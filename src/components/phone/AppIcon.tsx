@@ -70,7 +70,7 @@ export default function AppIcon({ app, badge, wiggle, showLabel = true, onOpen, 
       <span className={`relative ${wiggle ? 'phone-wiggle' : ''}`}>
         <AppGlyph app={app} />
         {badge ? (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF3B30] px-1.5 text-[12px] font-semibold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 animate-pulse items-center justify-center rounded-full bg-[#FF3B30] px-1.5 text-[12px] font-semibold text-white">
             {badge}
           </span>
         ) : null}

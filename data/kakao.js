@@ -1,63 +1,82 @@
+/*
+ * 카카오톡 대화방 데이터
+ * - id: 방 이름표 (바꾸지 마세요)
+ * - memberCount: 대화방 인원 수 (1:1 방은 2)
+ * - unread: 안 읽은 메시지 수
+ * - messages: 대화 내용. from은 보낸 사람 이름, 'me'는 태산입니다.
+ * - type: text(일반) / notice(공지) / deleted(삭제된 메시지)
+ * - 따옴표 안의 글자만 고치세요. 쉼표(,)와 중괄호({ })는 지우지 마세요.
+ */
 export const kakaoRooms = [
+  {
+    id: 'donghyun',
+    name: '동현',
+    memberCount: 2,
+    unread: 6,
+    messages: [
+      { id: 'k-d01', date: '2026-10-14', time: '19:02', from: '동현', type: 'text', text: '형 병원 갔다 학교 온 거 ㄹㅇ 대박임' },
+      { id: 'k-d02', date: '2026-10-14', time: '19:03', from: '동현', type: 'text', text: '얼굴 빨개서 옴 ㅋㅋㅋㅋ' },
+      { id: 'k-d03', date: '2026-10-14', time: '19:05', from: '동현', type: 'text', text: '아프다면서 왜 왔냐니까 형이 누가 보고싶어서래' },
+      { id: 'k-d04', date: '2026-10-14', time: '19:06', from: '동현', type: 'text', text: 'ㅋㅋㅋㅋㅋㅋ 누구겠냐' },
+      { id: 'k-d05', date: '2026-10-14', time: '19:07', from: '동현', type: 'text', text: '병원은 그냥 좀 아파서 갔다는데 무슨 병원인지는 말 안 해 줌' },
+      { id: 'k-d06', date: '2026-10-14', time: '20:15', from: '동현', type: 'text', text: '근데 형 생일 D-8인데 뭐 줌ㅋㅋ' },
+    ],
+  },
+  {
+    id: 'jaehyun',
+    name: '재현',
+    memberCount: 2,
+    unread: 1,
+    messages: [
+      { id: 'k-j01', date: '2026-10-14', time: '12:41', from: '재현', type: 'text', text: '상혁 오늘 얼굴이 많이 빨갰다. 열이 있는 건지 모르겠다.' },
+    ],
+  },
+  {
+    id: 'seongho',
+    name: '성호',
+    memberCount: 2,
+    unread: 1,
+    messages: [
+      { id: 'k-s01', date: '2026-10-14', time: '13:20', from: '성호', type: 'text', text: '상혁이 너 연락 보라던데. 봤냐.' },
+    ],
+  },
   {
     id: 'class',
     name: '1학년 3반',
     memberCount: 28,
-    unread: 12,
+    unread: 0,
     messages: [
-      { id: 'k-c01', date: '2026-05-27', time: '07:50', from: '하린', type: 'notice', text: '5/29 축제 리허설 집합 시간이 바뀌었습니다. 15:00에서 14:30으로, 강당 앞 집합. 악기 세팅은 13:40까지 끝내 주세요.' },
-      { id: 'k-c02', date: '2026-05-27', time: '18:12', from: '민재', type: 'text', text: '체육관 오늘 방과후 쓰는 거 맞아? 탁구부가 먼저 쓴다던데' },
-      { id: 'k-c03', date: '2026-05-27', time: '18:14', from: 'me', type: 'text', text: '아니, 탁구부는 17시까지고 그다음이 농구부야. 일정표 올라와 있어' },
-      { id: 'k-c04', date: '2026-05-27', time: '18:15', from: '하린', type: 'schedule', title: '체육관 사용 일정 (5/28)', when: '15:30 - 17:00', where: '탁구부', lines: ['17:00 - 18:30 농구부', '18:30 - 20:00 배드민턴부 (예약 취소됨)'] },
-      { id: 'k-c05', date: '2026-05-27', time: '18:20', from: '성호', type: 'text', text: '배드민턴부 취소된 거 누가 건 거야?' },
-      { id: 'k-c06', date: '2026-05-27', time: '18:21', from: '하린', type: 'deleted', text: '삭제된 메시지입니다.' },
-      { id: 'k-c07', date: '2026-05-27', time: '20:41', from: '상혁', type: 'text', text: '내일 리허설 악보 단톡에 올려둘게' },
+      { id: 'k-c01', date: '2026-10-14', time: '08:10', from: '하린', type: 'notice', text: '10/28 축제 단체복 투표 링크 올립니다. 18일까지!' },
+      { id: 'k-c02', date: '2026-10-14', time: '08:25', from: '민재', type: 'text', text: '1번 후드 아니면 안 입는다' },
+      { id: 'k-c03', date: '2026-10-14', time: '08:26', from: '유나', type: 'text', text: '2번 바람막이가 무조건 이득임' },
     ],
   },
   {
     id: 'tabletennis',
     name: '탁구부 단톡',
     memberCount: 6,
-    unread: 3,
+    unread: 0,
     messages: [
-      { id: 'k-t01', date: '2026-05-27', time: '21:03', from: '상혁', type: 'text', text: '복식 조 아직 정리 안 됐지? 내가 내일 아침까지 정할게' },
-      { id: 'k-t02', date: '2026-05-27', time: '21:05', from: '동현', type: 'text', text: '우리 둘이 같은 조 아니면 안 됨. 지난번에 졌잖아' },
-      { id: 'k-t03', date: '2026-05-27', time: '21:06', from: 'me', type: 'text', text: '그럼 투표로 하자' },
-      { id: 'k-t04', date: '2026-05-27', time: '21:08', from: '상혁', type: 'poll', question: '대회 복식 파트너 (자유 투표)', options: [{ label: '상혁 · 태산', votes: 2 }, { label: '동현 · 성호', votes: 1 }, { label: '재현 · 태산', votes: 0 }] },
-      { id: 'k-t05', date: '2026-05-28', time: '08:02', from: '상혁', type: 'notice', text: '[복식 조 발표] 1조 상혁·태산 / 2조 동현·성호 / 예비 재현' },
-      { id: 'k-t06', date: '2026-05-28', time: '08:03', from: '상혁', type: 'deleted', text: '삭제된 메시지입니다.' },
-      { id: 'k-t07', date: '2026-05-28', time: '08:10', from: '동현', type: 'text', text: '2조 그대로 하는 거지? 성호 체력 괜찮냐' },
-      { id: 'k-t08', date: '2026-05-28', time: '08:14', from: '성호', type: 'text', text: '괜찮음. 대신 첫 게임은 내가 서브 넣을게' },
+      { id: 'k-t01', date: '2026-10-14', time: '17:30', from: '상혁', type: 'text', text: '내일 복식 조 발표한다' },
+      { id: 'k-t02', date: '2026-10-14', time: '17:31', from: '동현', type: 'text', text: '저 형이랑 다시 하면 안 됨? 지난번 졌잖아요' },
+      { id: 'k-t03', date: '2026-10-14', time: '17:33', from: '성호', type: 'text', text: '그건 너 실력' },
     ],
   },
   {
     id: 'band',
-    name: '축제 밴드',
+    name: '보넥 밴드',
     memberCount: 5,
     unread: 0,
     messages: [
-      { id: 'k-b01', date: '2026-05-27', time: '22:10', from: '재현', type: 'text', text: '보컬 파트 정리함. 1절은 나, 후렴 코러스는 태산이랑 유나. 2절 랩은 상혁이' },
-      { id: 'k-b02', date: '2026-05-27', time: '22:12', from: '상혁', type: 'text', text: '랩 2절 맞아? 기타 치면서 하기는 어려울 것 같은데' },
-      { id: 'k-b03', date: '2026-05-27', time: '22:13', from: '재현', type: 'text', text: '기타는 간주 끝나고 들어가면 돼. 악보 보고 맞춰 봐' },
-      { id: 'k-b04', date: '2026-05-27', time: '22:15', from: 'me', type: 'text', text: '코러스 음정 기준이 어디야? 키 낮출까' },
-      { id: 'k-b05', date: '2026-05-27', time: '22:16', from: '재현', type: 'file', text: '보컬_파트표_v2.pdf', size: '1.2 MB' },
-      { id: 'k-b06', date: '2026-05-27', time: '22:20', from: '재현', type: 'deleted', text: '삭제된 메시지입니다.' },
-      { id: 'k-b07', date: '2026-05-28', time: '09:30', from: '재현', type: 'schedule', title: '리허설 시간 (5/28)', when: '18:00 - 19:30', where: '강당 무대', lines: ['18:00 - 18:20 세팅과 사운드 체크', '18:20 - 19:10 1회차 통으로 연주', '19:10 - 19:30 후렴 정리'] },
-      { id: 'k-b08', date: '2026-05-28', time: '09:41', from: '재현', type: 'schedule', title: '공연 순서 (5/29)', when: '5/29 (금) 오후 3시', where: '강당 앞 무대', lines: ['1. 개회 · 학생회 인사', '2. 1학년 3반 댄스', '3. 축제 밴드 (재현 · 상혁 · 동현 · 유나 · 태산)', '4. 탁구부 시범 경기'] },
-      { id: 'k-b09', date: '2026-05-28', time: '09:44', from: '상혁', type: 'text', text: '3번이면 우리 앞이 댄스네. 준비 시간 충분해?' },
+      { id: 'k-b01', date: '2026-10-13', time: '22:10', from: '재현', type: 'text', text: '오디션 공지는 일요일에 올린다. 보컬 지원자는 연습 영상 준비' },
+      { id: 'k-b02', date: '2026-10-13', time: '22:12', from: '유나', type: 'text', text: '태산아 지원해' },
     ],
   },
   {
-    id: 'council',
-    name: '학생회 · 축제 운영',
-    memberCount: 9,
-    unread: 1,
-    messages: [
-      { id: 'k-s01', date: '2026-05-27', time: '17:30', from: '성호', type: 'notice', text: '[공지] 정문 조명 점검은 5/28 19:00부터 진행합니다. 밝기가 이상한 곳이 보이면 사진으로 올려 주세요.' },
-      { id: 'k-s02', date: '2026-05-27', time: '20:30', from: '재현', type: 'text', text: '부스 신청 마감(5/10) 지났는데 체육관 쪽 신청이 두 개 더 들어왔어. 받을까?' },
-      { id: 'k-s03', date: '2026-05-27', time: '20:33', from: '하린', type: 'text', text: '받자. 대신 자리 배치는 내가 보내는 표 기준으로' },
-      { id: 'k-s04', date: '2026-05-27', time: '20:35', from: 'me', type: 'text', text: '알겠어. 정문 점검 때 나도 같이 갈게' },
-      { id: 'k-s05', date: '2026-05-28', time: '18:40', from: '성호', type: 'text', text: '좋아. 19시에 정문 앞에서 보자' },
-    ],
+    id: 'me',
+    name: '나와의 채팅',
+    memberCount: 1,
+    unread: 0,
+    messages: [],
   },
 ];

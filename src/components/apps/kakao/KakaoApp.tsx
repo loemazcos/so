@@ -33,7 +33,7 @@ export default function KakaoApp() {
             ...current,
             [activeRoom.id]: [
               ...(current[activeRoom.id] ?? []),
-              { id: `sent-${Date.now()}`, date: '2026-05-28', time: '방금', from: 'me', type: 'text', text },
+              { id: `sent-${Date.now()}`, date: '2026-10-14', time: '방금', from: 'me', type: 'text', text },
             ],
           }))
         }

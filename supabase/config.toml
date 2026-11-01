@@ -1,2 +1,5 @@
 [functions.dm-reply]
 verify_jwt = true
+
+[functions.game-api]
+verify_jwt = false

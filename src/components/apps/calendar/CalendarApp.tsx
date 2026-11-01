@@ -8,8 +8,8 @@ import { fetchCalendarEvents, type CalendarEvent } from '@/lib/calendar';
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
 const START_YEAR = 2026;
-const START_MONTH = 4;
-const START_DATE = '2026-05-28';
+const START_MONTH = 9;
+const START_DATE = '2026-10-14';
 
 export default function CalendarApp() {
   const [events, setEvents] = useState<CalendarEvent[] | null>(null);

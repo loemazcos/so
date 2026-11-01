@@ -12,7 +12,7 @@ const COMMON_RULES = `
 - 상대가 방금 한 말에 바로 반응한다. 질문에는 답하고, 묻지 않은 이야기는 꺼내지 않는다.
 - 이모지, ^^, ㅠㅠ, ㅜㅜ는 절대 쓰지 않는다. ㅋㅋ는 어울릴 때만 짧게 쓴다.
 - 모르는 사실은 지어내지 않는다. 모르면 모른다고 말한다.
-- 지금 일정은 2026년 5월 말 축제 준비 기간이다. 장소와 시간은 이 설정을 벗어나지 않는다.
+- 지금은 2026년 10월 14일, 보넥고 축제(10월 28일) 2주 전이다. 장소와 시간은 이 설정을 벗어나지 않는다.
 `;
 
 const PERSONAS: Record<string, { prompt: string }> = {
@@ -76,6 +76,26 @@ function cleanReply(raw: string) {
     .slice(0, 300);
 }
 
+const DEVICE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MINUTE_LIMIT = 6;
+const DAY_LIMIT = 80;
+
+async function consumeRateLimit(supabase: ReturnType<typeof createClient>, key: string, windowStart: string, limit: number) {
+  const { data, error } = await supabase.rpc("consume_rate_limit", { p_key: key, p_window: windowStart, p_limit: limit });
+  if (error) throw error;
+  return data === true;
+}
+
+async function isWithinLimits(supabase: ReturnType<typeof createClient>, deviceId: string) {
+  const now = Date.now();
+  const minuteStart = new Date(Math.floor(now / 60000) * 60000).toISOString();
+  const dayStart = new Date(Math.floor(now / 86400000) * 86400000).toISOString();
+  const globalCap = Number(Deno.env.get("GLOBAL_DAILY_CAP")) || 3000;
+  return (await consumeRateLimit(supabase, `minute:${deviceId}`, minuteStart, MINUTE_LIMIT)) &&
+    (await consumeRateLimit(supabase, `day:${deviceId}`, dayStart, DAY_LIMIT)) &&
+    (await consumeRateLimit(supabase, "global", dayStart, globalCap));
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -90,10 +110,11 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
+    const deviceId = typeof body?.deviceId === "string" ? body.deviceId : "";
     const threadId = typeof body?.threadId === "string" ? body.threadId : "";
     const history: unknown = body?.history;
 
-    if (!PERSONAS[threadId] || !Array.isArray(history) || history.length < 1 || history.length > 30) {
+    if (!DEVICE_ID_PATTERN.test(deviceId) || !PERSONAS[threadId] || !Array.isArray(history) || history.length < 1 || history.length > 30) {
       return json({ error: "잘못된 요청이에요." }, 400);
     }
     if (!history.every(isTurn)) {
@@ -102,6 +123,11 @@ Deno.serve(async (req: Request) => {
     const turns = history as Turn[];
     if (turns[turns.length - 1].from !== "me") {
       return json({ error: "잘못된 요청이에요." }, 400);
+    }
+
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    if (!(await isWithinLimits(supabase, deviceId))) {
+      return json({ error: "요청이 너무 많아요. 잠시 후 다시 보내 주세요." }, 429);
     }
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
@@ -117,7 +143,7 @@ Deno.serve(async (req: Request) => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5",
+        model: Deno.env.get("ANTHROPIC_MODEL") ?? "claude-haiku-5-5",
         max_tokens: 300,
         system: PERSONAS[threadId].prompt,
         messages: toAnthropicMessages(turns),
@@ -134,8 +160,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "답장을 만들지 못했어요. 잠시 후 다시 보내 주세요." }, 502);
     }
 
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { error } = await supabase.from("dm_messages").insert({ thread_id: threadId, sender: "them", body: reply });
+    const { error } = await supabase.from("dm_messages").insert({ device_id: deviceId, thread_id: threadId, sender: "them", body: reply });
     if (error) {
       return json({ error: "답장을 저장하지 못했어요." }, 500);
     }

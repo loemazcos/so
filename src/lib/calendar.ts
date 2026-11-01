@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { callFunction } from '@/lib/gameApi';
+import { calendarSeed } from '@data/calendar-seed';
 
 export type CalendarKind = 'school' | 'festival' | 'club' | 'exam' | 'council' | 'personal';
 export type CalendarStatus = 'scheduled' | 'changed' | 'cancelled';
@@ -37,19 +38,19 @@ export const KIND_META: Record<CalendarKind, { label: string; dot: string }> = {
 
 export const KIND_ORDER: CalendarKind[] = ['school', 'festival', 'club', 'exam', 'council', 'personal'];
 
+type LoadResponse = { calendarEvents?: unknown };
+
 export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
-  const { data, error } = await supabase
-    .from('calendar_events')
-    .select('id, title, event_date, start_time, end_time, place, memo, kind, status, status_note')
-    .order('event_date', { ascending: true })
-    .order('start_time', { ascending: true, nullsFirst: true });
-  if (error) throw new Error(error.message);
-  return data as CalendarEvent[];
+  const data = await callFunction<LoadResponse>('game-api', { action: 'load' });
+  if (!Array.isArray(data.calendarEvents)) throw new Error('일정을 불러오지 못했어요.');
+  const playerEvents = data.calendarEvents as CalendarEvent[];
+  return [...(calendarSeed as CalendarEvent[]), ...playerEvents].sort(
+    (a, b) => a.event_date.localeCompare(b.event_date) || (a.start_time ?? '').localeCompare(b.start_time ?? ''),
+  );
 }
 
 export async function insertCalendarEvent(input: NewCalendarEvent): Promise<void> {
-  const { error } = await supabase.from('calendar_events').insert(input);
-  if (error) throw new Error(error.message);
+  await callFunction('game-api', { action: 'saveCalendarEvent', payload: input });
 }
 
 export function toDateKey(year: number, monthIndex: number, day: number) {

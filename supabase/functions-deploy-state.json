@@ -3,7 +3,11 @@
   "functions": {
     "dm-reply": {
       "hasChanged": false,
-      "hash": "b5aa124cf8af636c6d865e9c14d08c97b5c705ec145f105445f1eea0dc5e9812"
+      "hash": "5bd75d013d1155d5e20edc02655fa1cf2eff4dc46d70112bf917510e026acaf0"
+    },
+    "game-api": {
+      "hasChanged": false,
+      "hash": "f5e865d83d09022921a826ab7232b99d3d28d8ea8cfc4045f8bdc329a121134a"
     }
   }
 }

@@ -178,6 +178,7 @@ function ChatView({ thread, messages, status, typing, locked, notice, consultOpe
   const [draft, setDraft] = useState('');
   const [consultDismissed, setConsultDismissed] = useState(false);
   const inputLocked = status !== 'ready' || locked;
+  const lastMineIndex = messages.reduce((found, message, index) => (message.from === 'me' ? index : found), -1);
 
   function submit() {
     const text = draft.trim();
@@ -223,25 +224,30 @@ function ChatView({ thread, messages, status, typing, locked, notice, consultOpe
             );
           }
           const mine = message.from === 'me';
+          const next = messages[index + 1];
+          const endsRun = !next || next.from !== message.from;
+          const tail = endsRun ? (mine ? 'rounded-br-[6px]' : 'rounded-bl-[6px]') : '';
           return (
             <div key={message.id ?? index} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
               <p
-                className={`max-w-[75%] rounded-[18px] px-3.5 py-2 text-[15px] leading-[1.4] ${
-                  mine ? 'rounded-br-[6px] bg-[#0A84FF] text-white' : 'rounded-bl-[6px] bg-[var(--card)] text-[var(--fg)]'
+                className={`max-w-[75%] rounded-[18px] px-3.5 py-2 text-[15px] leading-[1.4] ${tail} ${
+                  mine ? 'bg-[#0A84FF] text-white' : 'bg-[#E9E9EB] text-[#1C1C1E] dark:bg-[#26262B] dark:text-[#F2F2F7]'
                 }`}
               >
                 {message.text}
               </p>
-              {mine && message.read && <span className="mt-0.5 text-[10px] text-[var(--fg-2)]">읽음</span>}
+              {mine && message.read && index === lastMineIndex && (
+                <span className="mt-0.5 text-[10px] text-[var(--fg-2)]">읽음</span>
+              )}
             </div>
           );
         })}
         {typing && (
           <div className="flex justify-start">
-            <span className="flex items-center gap-1 rounded-[18px] rounded-bl-[6px] bg-[var(--card)] px-3.5 py-3" aria-label="입력 중">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--fg-2)]" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--fg-2)] [animation-delay:150ms]" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--fg-2)] [animation-delay:300ms]" />
+            <span className="flex items-center gap-1 rounded-[18px] rounded-bl-[6px] bg-[#E9E9EB] px-3.5 py-3 dark:bg-[#26262B]" aria-label="입력 중">
+              <span className="typing-dot h-1.5 w-1.5 rounded-full bg-[var(--fg-2)]" />
+              <span className="typing-dot h-1.5 w-1.5 rounded-full bg-[var(--fg-2)] [animation-delay:150ms]" />
+              <span className="typing-dot h-1.5 w-1.5 rounded-full bg-[var(--fg-2)] [animation-delay:300ms]" />
             </span>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type PointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { apps } from '@data/apps.config';
 import { cuts } from '@data/story/cuts';
 import { questions, defaultQuestion } from '@data/story/questions';
@@ -14,6 +14,7 @@ import DeadPhone from '@/components/phone/DeadPhone';
 import HomeScreen from '@/components/phone/HomeScreen';
 import IncomingCall from '@/components/phone/IncomingCall';
 import LockScreen from '@/components/phone/LockScreen';
+import NotificationBanner from '@/components/phone/NotificationBanner';
 import NotificationCenter from '@/components/phone/NotificationCenter';
 import SleepSheet from '@/components/phone/SleepSheet';
 import Spotlight from '@/components/phone/Spotlight';
@@ -49,6 +50,7 @@ import {
   minutesIntoDay,
   minutesUntilNextBreak,
   phaseOf,
+  type Notice,
 } from '@/state/timeline';
 import type { AppConfig, Rect } from '@/lib/types';
 
@@ -96,6 +98,17 @@ export default function Phone() {
   const [sleepOpen, setSleepOpen] = useState(false);
   const [seenDay, setSeenDay] = useState(run.day);
   const [cutDay, setCutDay] = useState<number | null>(null);
+  const [banner, setBanner] = useState<Notice | null>(null);
+  const arrivedNotices = run.notices.filter((notice) => notice.arriveAt <= run.t && !notice.queued);
+  const latestNotice = arrivedNotices[arrivedNotices.length - 1] ?? null;
+  const seenNotice = useRef(latestNotice?.id ?? null);
+
+  useEffect(() => {
+    if (!latestNotice || latestNotice.id === seenNotice.current) return;
+    seenNotice.current = latestNotice.id;
+    setBanner(latestNotice);
+  }, [latestNotice]);
+  const clearBanner = useCallback(() => setBanner(null), []);
 
   if (run.day !== seenDay) {
     setSeenDay(run.day);
@@ -353,6 +366,17 @@ export default function Phone() {
         {dimmed ? <div className="pointer-events-none absolute inset-0 z-[57] bg-black/25" /> : null}
 
         {!locked && run.nightCutPending && !run.nightCutPlayed ? <TypingCutBanner onDone={finishTypingCut} /> : null}
+
+        {!locked && banner ? (
+          <NotificationBanner
+            key={banner.id}
+            appId={banner.appId}
+            title={banner.title}
+            body={banner.body}
+            time={banner.time}
+            onDismiss={clearBanner}
+          />
+        ) : null}
 
         {!locked && clueDiscovery.pending ? (
           <ClueBanner key={clueDiscovery.pending} clueId={clueDiscovery.pending} onDone={clueDiscovery.dismiss} />

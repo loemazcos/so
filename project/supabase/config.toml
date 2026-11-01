@@ -1,0 +1,2 @@
+[functions.dm-reply]
+verify_jwt = true

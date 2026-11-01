@@ -5,3 +5,5 @@ By default, this template supports JSX syntax with Tailwind CSS classes, React h
 Use icons from lucide-react for logos.
 
 Import project modules with the `@/` path alias, which maps to `src/` (e.g. `@/components/Foo` == `src/components/Foo`), instead of deep relative paths like `../../components/Foo`.
+- 모든 작업을 시작하기 전에 docs/GAME_RULES.md를 읽고 그 규칙을 따른다. 규칙과 요청이 어긋나면 먼저 나에게 묻는다.
+- 작업이 끝나면 무엇을 바꿨는지 5줄 이내로 요약한다.

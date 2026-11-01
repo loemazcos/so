@@ -33,6 +33,7 @@ export const apps = [
   { id: 'music', name: '뮤직', icon: 'music', colors: ['#FF9BAD', '#E63956'], ink: '#ffffff' },
   { id: 'video', name: '영상', icon: 'play', colors: ['#FFA6A6', '#E03E3E'], ink: '#ffffff' },
   { id: 'memo', name: '메모', icon: 'note', colors: ['#FFF4A8', '#F2C230'], ink: '#1c1c1e' },
+  { id: 'clueBook', name: '단서 도감', icon: 'school', colors: ['#D4E4F7', '#5B7FA6'], ink: '#ffffff' },
   { id: 'calendar', name: '캘린더', icon: 'calendar', colors: ['#FFFFFF', '#E4E4EA'], ink: '#e5484d' },
   { id: 'clock', name: '시계', icon: 'clock', colors: ['#3A3A3F', '#111114'], ink: '#ffffff' },
   { id: 'browser', name: '브라우저', icon: 'compass', colors: ['#A6DCFF', '#1E88E5'], ink: '#ffffff' },

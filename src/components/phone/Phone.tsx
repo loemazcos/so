@@ -6,6 +6,7 @@ import AppSwitcher from '@/components/phone/AppSwitcher';
 import AppWindow from '@/components/phone/AppWindow';
 import BootScreen from '@/components/phone/BootScreen';
 import ClassOverlay from '@/components/phone/ClassOverlay';
+import ClueBanner from '@/components/phone/ClueBanner';
 import ControlCenter from '@/components/phone/ControlCenter';
 import DayCutOverlay from '@/components/phone/DayCutOverlay';
 import HomeScreen from '@/components/phone/HomeScreen';
@@ -16,6 +17,7 @@ import Spotlight from '@/components/phone/Spotlight';
 import StatusBar from '@/components/phone/StatusBar';
 import TypingCutBanner from '@/components/phone/TypingCutBanner';
 import Wallpaper from '@/components/phone/Wallpaper';
+import { useClueDiscovery } from '@/hooks/useClueDiscovery';
 import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
 import { remainingMinutes } from '@/lib/remit';
@@ -70,6 +72,7 @@ function resolveKind(zone: Gesture['zone'], dy: number, side: 'nc' | 'cc'): Gest
 export default function Phone() {
   const now = useGameClock();
   const { run, update } = useGameState();
+  const clueDiscovery = useClueDiscovery(run.clues);
   const screenRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const [locked, setLocked] = useState(true);
@@ -327,6 +330,10 @@ export default function Phone() {
         {dimmed ? <div className="pointer-events-none absolute inset-0 z-[57] bg-black/25" /> : null}
 
         {!locked && run.nightCutPending && !run.nightCutPlayed ? <TypingCutBanner onDone={finishTypingCut} /> : null}
+
+        {!locked && clueDiscovery.pending ? (
+          <ClueBanner key={clueDiscovery.pending} clueId={clueDiscovery.pending} onDone={clueDiscovery.dismiss} />
+        ) : null}
 
         {cut ? <DayCutOverlay key={cut.day} text={cut.text} onDone={clearDayCut} /> : null}
 

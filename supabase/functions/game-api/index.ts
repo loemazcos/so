@@ -11,6 +11,8 @@ const THREAD_IDS = ["sanghyuk", "donghyun", "jaehyun", "seongho"];
 const CALENDAR_KINDS = ["school", "festival", "club", "exam", "council", "personal"];
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
+const CLUE_ID_PATTERN = /^C(0[1-9]|1\d|2[0-4])$/;
+const UNIQUE_VIOLATION = "23505";
 
 class BadRequest extends Error {}
 
@@ -189,6 +191,14 @@ async function saveCalendarEvent(
   return { ok: true };
 }
 
+async function discoverClue(supabase: ReturnType<typeof createClient>, deviceId: string, payload: Record<string, unknown>) {
+  const clueId = typeof payload.clueId === "string" ? payload.clueId : "";
+  if (!CLUE_ID_PATTERN.test(clueId)) throw new BadRequest();
+  const { error } = await supabase.from("clue_discoveries").insert({ device_id: deviceId, clue_id: clueId });
+  if (error && error.code !== UNIQUE_VIOLATION) throw new Error("insert failed");
+  return { ok: true, created: !error };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -215,6 +225,8 @@ Deno.serve(async (req: Request) => {
         return json(await saveCalendarEvent(supabase, deviceId, payload));
       case "saveState":
         return json(await saveState(supabase, deviceId, payload));
+      case "discoverClue":
+        return json(await discoverClue(supabase, deviceId, payload));
       default:
         return json({ error: "잘못된 요청이에요." }, 400);
     }

@@ -2,6 +2,7 @@ import { HelpCircle } from 'lucide-react';
 import AppGlyph from '@/components/phone/AppGlyph';
 import KakaoApp from '@/components/apps/kakao/KakaoApp';
 import CalendarApp from '@/components/apps/calendar/CalendarApp';
+import ClueBookApp from '@/components/apps/clueBook/ClueBookApp';
 import InstagramApp from '@/components/apps/instagram/InstagramApp';
 import MemoApp from '@/components/apps/memo/MemoApp';
 import RemitApp from '@/components/apps/remit/RemitApp';
@@ -15,6 +16,7 @@ export default function AppContent({ app }: Props) {
   if (app.id === 'kakao') return <KakaoApp />;
   if (app.id === 'calendar') return <CalendarApp />;
   if (app.id === 'memo') return <MemoApp />;
+  if (app.id === 'clueBook') return <ClueBookApp />;
   if (app.id === 'remit') return <RemitApp />;
   if (app.id === 'settings') return <SettingsApp />;
   return (

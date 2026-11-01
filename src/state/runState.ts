@@ -66,6 +66,7 @@ export type RunState = {
   booted: boolean;
   dnd: boolean;
   activityStatus: boolean;
+  soundOn: boolean;
   courage: number;
   mind: number;
   rumor: number;
@@ -106,6 +107,7 @@ export const DEFAULT_RUN: RunState = {
   booted: false,
   dnd: false,
   activityStatus: true,
+  soundOn: true,
   courage: 20,
   mind: 60,
   rumor: 10,
@@ -326,6 +328,10 @@ export function setDnd(run: RunState, dnd: boolean): RunState {
 
 export function setActivityStatus(run: RunState, activityStatus: boolean): RunState {
   return { ...run, activityStatus };
+}
+
+export function setSoundOn(run: RunState, soundOn: boolean): RunState {
+  return { ...run, soundOn };
 }
 
 export function markNightCutPlayed(run: RunState): RunState {

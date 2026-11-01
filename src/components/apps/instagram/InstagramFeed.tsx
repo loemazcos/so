@@ -86,7 +86,8 @@ export default function InstagramFeed({ onOpenRumor, onOpenStory }: Props) {
         </button>
       </div>
 
-      {rumorItems.map((item, index) => (
+      <div className="flex flex-col gap-3">
+        {rumorItems.map((item, index) => (
         <PostCard
           key={item.id}
           post={item}
@@ -101,6 +102,7 @@ export default function InstagramFeed({ onOpenRumor, onOpenStory }: Props) {
           onOpenAccount={onOpenRumor}
         />
       ))}
+      </div>
 
       {shown.map((post) => (
         <PostCard

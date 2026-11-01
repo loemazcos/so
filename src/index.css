@@ -182,6 +182,28 @@ button {
   animation: typing-dot 0.9s ease-in-out infinite;
 }
 
+@keyframes heart-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-pop {
+  animation: heart-pop 0.35s ease-out;
+}
+
+:where(.phone-screen *) {
+  transition-property: background-color, border-color, color;
+  transition-duration: 400ms;
+  transition-timing-function: ease;
+}
+
 .phone-edge-pulse {
   animation: phone-edge-pulse 0.9s ease-in-out infinite;
 }

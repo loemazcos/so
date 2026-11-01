@@ -1,5 +1,5 @@
 import { useGameState } from '@/state/GameState';
-import { setActivityStatus } from '@/state/runState';
+import { setActivityStatus, setSoundOn } from '@/state/runState';
 
 export default function SettingsApp() {
   const { run, update } = useGameState();
@@ -24,6 +24,27 @@ export default function SettingsApp() {
             <span
               className={`absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow transition-transform ${
                 on ? 'translate-x-[22px]' : 'translate-x-[2px]'
+              }`}
+            />
+          </span>
+        </button>
+        <div className="my-3 h-px bg-[var(--line)]" />
+        <button
+          type="button"
+          role="switch"
+          aria-checked={run.soundOn}
+          aria-label="소리"
+          onClick={() => update((current) => setSoundOn(current, !current.soundOn))}
+          className="flex w-full items-center gap-3 text-left"
+        >
+          <span className="flex-1">
+            <span className="block text-[15px] font-semibold">소리</span>
+            <span className="block text-[12px] text-[var(--fg-2)]">메시지와 알림에 소리가 나요. 방해금지 중에는 조용해요</span>
+          </span>
+          <span className={`relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors ${run.soundOn ? 'bg-[#34C759]' : 'bg-[var(--key-pressed)]'}`}>
+            <span
+              className={`absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow transition-transform ${
+                run.soundOn ? 'translate-x-[22px]' : 'translate-x-[2px]'
               }`}
             />
           </span>

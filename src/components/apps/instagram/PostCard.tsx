@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bookmark, Heart, MessageCircle } from 'lucide-react';
+import { Bookmark, MessageCircle } from 'lucide-react';
+import LikeHeart from '@/components/apps/instagram/LikeHeart';
 import Avatar from '@/components/apps/Avatar';
 import { commentChoices } from '@data/instagram';
 
@@ -86,14 +87,7 @@ export default function PostCard({
       )}
 
       <div className="flex items-center gap-4 px-3 pt-2.5">
-        <button
-          type="button"
-          onClick={onLike}
-          aria-label={liked ? '좋아요 취소' : '좋아요'}
-          className="transition-transform active:scale-90"
-        >
-          <Heart size={22} strokeWidth={2} className={liked ? 'fill-[#E0457B] text-[#E0457B]' : 'text-[var(--fg)]'} />
-        </button>
+        <LikeHeart liked={liked} onToggle={onLike} />
         <span className="flex items-center gap-1.5 text-[12px] text-[var(--fg-2)]">
           <MessageCircle size={20} strokeWidth={2} aria-hidden="true" />
           {commentCount}

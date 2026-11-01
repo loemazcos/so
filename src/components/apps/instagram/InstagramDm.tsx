@@ -4,6 +4,7 @@ import Avatar from '@/components/apps/Avatar';
 import SanghyukChat from '@/components/apps/instagram/SanghyukChat';
 import { useDmStore } from '@/hooks/useDmStore';
 import { requestDmCallback, type DmCallbackKey, type DmMessage, type DmThread } from '@/lib/dmChat';
+import { playSound } from '@/lib/sound';
 import { useGameState } from '@/state/GameState';
 import { openConsult, type ConsultRoom } from '@/state/consults';
 import { chooseConsult } from '@/state/kakaoActions';
@@ -176,6 +177,14 @@ type ChatProps = {
 
 function ChatView({ thread, messages, status, typing, locked, notice, consultOpen, onConsult, onBack, onSend }: ChatProps) {
   const [draft, setDraft] = useState('');
+  const { run } = useGameState();
+  const audible = run.soundOn && !run.dnd;
+
+  useEffect(() => {
+    if (!typing) return;
+    const id = window.setInterval(() => playSound('typing', audible), 320);
+    return () => window.clearInterval(id);
+  }, [typing, audible]);
   const [consultDismissed, setConsultDismissed] = useState(false);
   const inputLocked = status !== 'ready' || locked;
   const lastMineIndex = messages.reduce((found, message, index) => (message.from === 'me' ? index : found), -1);

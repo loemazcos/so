@@ -24,6 +24,7 @@ import Wallpaper from '@/components/phone/Wallpaper';
 import { useClueDiscovery } from '@/hooks/useClueDiscovery';
 import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
+import { playSound, unlockAudio, vibrate } from '@/lib/sound';
 import { CALL_MIN_BATTERY, canCallBack, findCall, incomingCall } from '@/state/calls';
 import { remainingMinutes } from '@/lib/remit';
 import { useGameState } from '@/state/GameState';
@@ -102,12 +103,15 @@ export default function Phone() {
   const arrivedNotices = run.notices.filter((notice) => notice.arriveAt <= run.t && !notice.queued);
   const latestNotice = arrivedNotices[arrivedNotices.length - 1] ?? null;
   const seenNotice = useRef(latestNotice?.id ?? null);
+  const audible = run.soundOn && !run.dnd;
+  const [shaking, setShaking] = useState(false);
 
   useEffect(() => {
     if (!latestNotice || latestNotice.id === seenNotice.current) return;
     seenNotice.current = latestNotice.id;
     setBanner(latestNotice);
-  }, [latestNotice]);
+    playSound('message', audible);
+  }, [latestNotice, audible]);
   const clearBanner = useCallback(() => setBanner(null), []);
 
   if (run.day !== seenDay) {
@@ -124,6 +128,26 @@ export default function Phone() {
   const dimmed = !run.charging && run.battery <= LOW_POWER_LINE;
   const lowBattery = !run.charging && run.battery <= LOW_BATTERY_LINE;
   const sleepQuestion = questions[run.day as keyof typeof questions] ?? defaultQuestion;
+  const heartbeatOn = run.remitStatus === 'open' && remitMinutes < 10;
+
+  useEffect(() => {
+    if (!clueDiscovery.pending) return;
+    setShaking(true);
+    playSound('clue', audible);
+    vibrate(20);
+    const timer = window.setTimeout(() => setShaking(false), 500);
+    return () => window.clearTimeout(timer);
+  }, [clueDiscovery.pending, audible]);
+
+  useEffect(() => {
+    if (lowBattery) playSound('battery', audible);
+  }, [lowBattery, audible]);
+
+  useEffect(() => {
+    if (!heartbeatOn) return;
+    const id = window.setInterval(() => playSound('heartbeat', audible), 1000);
+    return () => window.clearInterval(id);
+  }, [heartbeatOn, audible]);
 
   const finishBootScreen = useCallback(() => update(finishBoot), [update]);
   const clearDayCut = useCallback(() => setCutDay(null), []);
@@ -171,6 +195,7 @@ export default function Phone() {
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    unlockAudio();
     if (locked) return;
     const screen = screenRef.current?.getBoundingClientRect();
     if (!screen) return;
@@ -254,7 +279,7 @@ export default function Phone() {
     <div className="phone-frame">
       <div
         ref={screenRef}
-        className="phone-screen"
+        className={shaking ? 'phone-screen phone-shake' : 'phone-screen'}
         data-theme={dark ? 'dark' : 'light'}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

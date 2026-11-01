@@ -7,6 +7,18 @@ import { DEFAULT_SOCIAL, settleSocial, type SocialState } from '@/state/social';
 import { DEFAULT_CONSULT, type ConsultState } from '@/state/consults';
 import { DEFAULT_DOUBLES, settleDoubles, type DoublesState } from '@/state/doubles';
 import { settleKakaoEvents, type KakaoAddition } from '@/state/kakaoEvents';
+import {
+  CALL_DROP_MIND,
+  CALL_MIN_BATTERY,
+  CALL_STEP_BATTERY,
+  CALL_STEP_MIN,
+  findCall,
+  type CallChoice,
+  incomingCall,
+  missCall,
+  settleCalls,
+  type CallScript,
+} from '@/state/calls';
 import { clampStat } from '@/state/stats';
 import {
   CHARGED_BATTERY,
@@ -74,6 +86,8 @@ export type RunState = {
   uniform: 1 | 2 | null;
   rumorPeak: number;
   doubles: DoublesState;
+  activeCall: { id: string; step: number; picks: number[] } | null;
+  callsDone: string[];
 };
 
 export const DEFAULT_RUN: RunState = {
@@ -110,6 +124,8 @@ export const DEFAULT_RUN: RunState = {
   uniform: null,
   rumorPeak: 10,
   doubles: DEFAULT_DOUBLES,
+  activeCall: null,
+  callsDone: [],
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -180,7 +196,7 @@ function normalize(run: RunState): RunState {
     };
   }
   next = { ...next, rumorPeak: Math.max(next.rumorPeak, next.rumor) };
-  return settleSocial(settleKakaoEvents(settleDoubles(next)));
+  return settleSocial(settleKakaoEvents(settleDoubles(settleCalls(next))));
 }
 
 function wakeUp(run: RunState, extraMinutes: number, shutdownNow: boolean): RunState {
@@ -348,6 +364,54 @@ export function releaseOneNotice(run: RunState): RunState {
   const index = run.notices.findIndex((notice) => notice.queued);
   if (index < 0) return run;
   return { ...run, notices: run.notices.map((notice, i) => (i === index ? { ...notice, queued: false } : notice)) };
+}
+
+export function answerCall(run: RunState): RunState {
+  const call = incomingCall(run);
+  if (!call || run.battery < CALL_MIN_BATTERY) return run;
+  return { ...run, activeCall: { id: call.id, step: 0, picks: [] }, callsDone: [...run.callsDone, call.id] };
+}
+
+export function declineCall(run: RunState): RunState {
+  const call = incomingCall(run);
+  return call ? missCall(run, call) : run;
+}
+
+export function hangUpCall(run: RunState): RunState {
+  return { ...run, activeCall: null };
+}
+
+function dropCall(run: RunState): RunState {
+  const mind = clampStat(run.mind + CALL_DROP_MIND);
+  return advanceRun({ ...run, mind, battery: 0, activeCall: null }, 0, 0);
+}
+
+export function stepCall(run: RunState, choice: number | null): RunState {
+  const active = run.activeCall;
+  if (!active) return run;
+  const call: CallScript | null = findCall(active.id);
+  const step = call?.steps?.[active.step];
+  if (!call || !step) return run;
+
+  let picked: CallChoice | null = null;
+  if (step.type === 'choose') {
+    picked = choice === null ? null : step.options[choice] ?? null;
+    if (!picked) return run;
+  }
+  if (run.battery - CALL_STEP_BATTERY <= 0) return dropCall(run);
+
+  const withEffects: RunState = picked
+    ? {
+        ...run,
+        mind: clampStat(run.mind + picked.mind),
+        courage: clampStat(run.courage + picked.courage),
+        activeCall: { ...active, picks: [...active.picks, choice as number] },
+      }
+    : run;
+  const advanced = advanceRun(withEffects, CALL_STEP_MIN, CALL_STEP_BATTERY);
+  const nextIndex = active.step + 1;
+  const ended = nextIndex >= (call.steps?.length ?? 0) || advanced.booted || advanced.day !== run.day;
+  return { ...advanced, activeCall: ended ? null : { ...withEffects.activeCall ?? active, step: nextIndex } };
 }
 
 export function applyDmEffects(run: RunState, delta: { trust: number; courage: number; rumor: number }): RunState {

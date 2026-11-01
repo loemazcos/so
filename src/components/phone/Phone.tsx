@@ -6,10 +6,12 @@ import AppSwitcher from '@/components/phone/AppSwitcher';
 import AppWindow from '@/components/phone/AppWindow';
 import BootScreen from '@/components/phone/BootScreen';
 import ClassOverlay from '@/components/phone/ClassOverlay';
+import CallScreen from '@/components/phone/CallScreen';
 import ClueBanner from '@/components/phone/ClueBanner';
 import ControlCenter from '@/components/phone/ControlCenter';
 import DayCutOverlay from '@/components/phone/DayCutOverlay';
 import HomeScreen from '@/components/phone/HomeScreen';
+import IncomingCall from '@/components/phone/IncomingCall';
 import LockScreen from '@/components/phone/LockScreen';
 import NotificationCenter from '@/components/phone/NotificationCenter';
 import SleepSheet from '@/components/phone/SleepSheet';
@@ -20,11 +22,16 @@ import Wallpaper from '@/components/phone/Wallpaper';
 import { useClueDiscovery } from '@/hooks/useClueDiscovery';
 import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
+import { CALL_MIN_BATTERY, findCall, incomingCall } from '@/state/calls';
 import { remainingMinutes } from '@/lib/remit';
 import { useGameState } from '@/state/GameState';
 import {
+  answerCall,
+  declineCall,
   finishBoot,
   finishSleep,
+  hangUpCall,
+  stepCall,
   goToSleep,
   markNightCutPlayed,
   advanceRun,
@@ -105,6 +112,9 @@ export default function Phone() {
   const finishBootScreen = useCallback(() => update(finishBoot), [update]);
   const clearDayCut = useCallback(() => setCutDay(null), []);
   const finishTypingCut = useCallback(() => update(markNightCutPlayed), [update]);
+  const stepActiveCall = useCallback((choice: number | null) => update((current) => stepCall(current, choice)), [update]);
+  const incoming = incomingCall(run);
+  const activeCall = run.activeCall ? findCall(run.activeCall.id) : null;
 
   const dark = isNightTime(now);
   const recentApps = recentIds.flatMap((id) => apps.filter((app) => app.id === id));
@@ -333,6 +343,26 @@ export default function Phone() {
 
         {!locked && clueDiscovery.pending ? (
           <ClueBanner key={clueDiscovery.pending} clueId={clueDiscovery.pending} onDone={clueDiscovery.dismiss} />
+        ) : null}
+
+        {!locked && incoming && !run.activeCall ? (
+          <IncomingCall
+            call={incoming}
+            canAnswer={run.battery >= CALL_MIN_BATTERY}
+            onAnswer={() => update(answerCall)}
+            onDecline={() => update(declineCall)}
+          />
+        ) : null}
+
+        {!locked && activeCall && run.activeCall ? (
+          <CallScreen
+            call={activeCall}
+            step={run.activeCall.step}
+            picks={run.activeCall.picks}
+            battery={run.battery}
+            onStep={stepActiveCall}
+            onHangUp={() => update(hangUpCall)}
+          />
         ) : null}
 
         {cut ? <DayCutOverlay key={cut.day} text={cut.text} onDone={clearDayCut} /> : null}

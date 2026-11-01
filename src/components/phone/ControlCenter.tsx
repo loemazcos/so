@@ -41,9 +41,10 @@ type Props = {
   onClose: () => void;
   dnd: boolean;
   onToggleDnd: () => void;
+  onCapture: () => void;
 };
 
-export default function ControlCenter({ progress, dragging, onClose, dnd, onToggleDnd }: Props) {
+export default function ControlCenter({ progress, dragging, onClose, dnd, onToggleDnd, onCapture }: Props) {
   const [on, setOn] = useState<Record<string, boolean>>(() =>
     Object.fromEntries([...CONNECTIVITY, ...ROUND_TOOLS].map((item) => [item.id, item.on]))
   );
@@ -157,6 +158,14 @@ export default function ControlCenter({ progress, dragging, onClose, dnd, onTogg
             <CircleDot size={20} strokeWidth={1.8} aria-hidden="true" />
           </ToggleButton>
         </div>
+        <button
+          type="button"
+          onClick={onCapture}
+          className="flex items-center justify-center gap-2 rounded-[22px] bg-[var(--card)] py-4 text-[14px] font-semibold transition-transform active:scale-[0.98]"
+        >
+          <Camera size={20} strokeWidth={1.8} aria-hidden="true" />
+          스크린샷
+        </button>
       </section>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, Send } from 'lucide-react';
 import Avatar from '@/components/apps/Avatar';
+import { useReportScreen } from '@/components/phone/ScreenReport';
 import { type DmThread } from '@/lib/dmChat';
 import { useGameState } from '@/state/GameState';
 import { answerSanghyuk, eraseDraft, sendDm } from '@/state/runState';
@@ -21,6 +22,7 @@ type Props = { thread: DmThread; onBack: () => void };
 
 export default function SanghyukChat({ thread, onBack }: Props) {
   const { run, update } = useGameState();
+  useReportScreen({ screen: '인스타 DM', title: thread.name, lines: thread.messages.slice(-3).map((message) => message.text) });
   const { choice, answeredAt } = run.sanghyuk;
   const [pressed, setPressed] = useState<Choice | null>(null);
   const [phase, setPhase] = useState<ReplyPhase>(answeredAt === null ? 'idle' : 'done');

@@ -7,6 +7,7 @@ import InstagramApp from '@/components/apps/instagram/InstagramApp';
 import MemoApp from '@/components/apps/memo/MemoApp';
 import RemitApp from '@/components/apps/remit/RemitApp';
 import SettingsApp from '@/components/apps/settings/SettingsApp';
+import CameraApp from '@/components/apps/camera/CameraApp';
 import type { AppConfig } from '@/lib/types';
 
 type Props = { app: AppConfig };
@@ -19,6 +20,7 @@ export default function AppContent({ app }: Props) {
   if (app.id === 'clueBook') return <ClueBookApp />;
   if (app.id === 'remit') return <RemitApp />;
   if (app.id === 'settings') return <SettingsApp />;
+  if (app.id === 'camera') return <CameraApp />;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 bg-[var(--bg)] px-8 text-center text-[var(--fg)]">
       <AppGlyph app={app} size={96} />

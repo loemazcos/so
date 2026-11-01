@@ -18,6 +18,7 @@ import NotificationBanner from '@/components/phone/NotificationBanner';
 import NotificationCenter from '@/components/phone/NotificationCenter';
 import SleepSheet from '@/components/phone/SleepSheet';
 import Spotlight from '@/components/phone/Spotlight';
+import { ScreenReportProvider, type ScreenSnapshot } from '@/components/phone/ScreenReport';
 import StatusBar from '@/components/phone/StatusBar';
 import TypingCutBanner from '@/components/phone/TypingCutBanner';
 import Wallpaper from '@/components/phone/Wallpaper';
@@ -26,11 +27,13 @@ import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
 import { playSound, unlockAudio, vibrate } from '@/lib/sound';
 import { CALL_MIN_BATTERY, canCallBack, findCall, incomingCall } from '@/state/calls';
+import { fetchDmRows } from '@/lib/dmChat';
 import { remainingMinutes } from '@/lib/remit';
 import { useGameState } from '@/state/GameState';
 import {
   answerCall,
   callBack,
+  captureScreen,
   chargePhone,
   declineCall,
   finishBoot,
@@ -113,6 +116,32 @@ export default function Phone() {
     playSound('message', audible);
   }, [latestNotice, audible]);
   const clearBanner = useCallback(() => setBanner(null), []);
+
+  const [snapshot, setSnapshot] = useState<ScreenSnapshot | null>(null);
+  const [flashing, setFlashing] = useState(false);
+
+  useEffect(() => {
+    if (!flashing) return;
+    const timer = window.setTimeout(() => setFlashing(false), 200);
+    return () => window.clearTimeout(timer);
+  }, [flashing]);
+
+  function currentScreenSource(): ScreenSnapshot {
+    if (snapshot) return snapshot;
+    const name = openState?.app.name ?? '홈 화면';
+    return { screen: name, title: name, lines: [] };
+  }
+
+  async function takeCapture(source: ScreenSnapshot & { noticeId?: string }) {
+    setFlashing(true);
+    const rows = source.noticeId ? await fetchDmRows().catch(() => []) : [];
+    const evidence = rows.some(
+      (row) => row.thread_id === 'sanghyuk' && row.status === 'unsent' && `dm-${row.id}` === source.noticeId,
+    );
+    update((current) =>
+      captureScreen(current, { id: crypto.randomUUID(), screen: source.screen, title: source.title, lines: source.lines, evidence }),
+    );
+  }
 
   if (run.day !== seenDay) {
     setSeenDay(run.day);
@@ -276,6 +305,7 @@ export default function Phone() {
   }
 
   return (
+    <ScreenReportProvider value={setSnapshot}>
     <div className="phone-frame">
       <div
         ref={screenRef}
@@ -318,6 +348,11 @@ export default function Phone() {
           dragging={drag !== null}
           now={now}
           onClose={() => setSheet(null)}
+          onCapture={
+            latestNotice
+              ? () => takeCapture({ screen: '알림센터', title: latestNotice.title, lines: [latestNotice.body], noticeId: latestNotice.id })
+              : undefined
+          }
         />
         <ControlCenter
           progress={progressOf('cc')}
@@ -325,6 +360,7 @@ export default function Phone() {
           onClose={() => setSheet(null)}
           dnd={run.dnd}
           onToggleDnd={() => update((current) => setDnd(current, !current.dnd))}
+          onCapture={() => takeCapture(currentScreenSource())}
         />
         <Spotlight
           progress={progressOf('spot')}
@@ -390,6 +426,8 @@ export default function Phone() {
 
         {dimmed ? <div className="pointer-events-none absolute inset-0 z-[57] bg-black/25" /> : null}
 
+        {flashing ? <div className="pointer-events-none absolute inset-0 z-[70] bg-white" /> : null}
+
         {!locked && run.nightCutPending && !run.nightCutPlayed ? <TypingCutBanner onDone={finishTypingCut} /> : null}
 
         {!locked && banner ? (
@@ -440,5 +478,6 @@ export default function Phone() {
         )}
       </div>
     </div>
+    </ScreenReportProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, Megaphone, Send } from 'lucide-react';
 import KakaoMessageItem from '@/components/apps/kakao/KakaoMessageItem';
+import { useReportScreen } from '@/components/phone/ScreenReport';
 import { formatDayLabel, type KakaoRoom } from '@/lib/kakao';
 
 type Props = {
@@ -13,6 +14,11 @@ type Props = {
 
 export default function KakaoRoomChat({ room, votes, onBack, onSend, onVote }: Props) {
   const [draft, setDraft] = useState('');
+  useReportScreen({
+    screen: '카톡',
+    title: room.name,
+    lines: room.messages.filter((message) => message.type === 'text' && message.text).slice(-3).map((message) => message.text ?? ''),
+  });
   const notice = [...room.messages].reverse().find((message) => message.type === 'notice');
 
   function submit() {

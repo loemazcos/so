@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Send } from 'lucide-react';
+import { useReportScreen } from '@/components/phone/ScreenReport';
 import Avatar from '@/components/apps/Avatar';
 import SanghyukChat from '@/components/apps/instagram/SanghyukChat';
 import { useDmStore } from '@/hooks/useDmStore';
@@ -179,6 +180,7 @@ function ChatView({ thread, messages, status, typing, locked, notice, consultOpe
   const [draft, setDraft] = useState('');
   const { run } = useGameState();
   const audible = run.soundOn && !run.dnd;
+  useReportScreen({ screen: '인스타 DM', title: thread.name, lines: messages.slice(-3).map((message) => message.text) });
 
   useEffect(() => {
     if (!typing) return;

@@ -22,6 +22,7 @@ import {
   type CallScript,
 } from '@/state/calls';
 import { clampStat } from '@/state/stats';
+import { CAPTURE_BATTERY, CAPTURE_MINUTES, pushCapture, type Capture } from '@/state/captures';
 import {
   CHARGED_BATTERY,
   DAY_MIN,
@@ -93,6 +94,7 @@ export type RunState = {
   callsDone: string[];
   droppedAt: number | null;
   droppedCall: string | null;
+  captures: Capture[];
 };
 
 export const DEFAULT_RUN: RunState = {
@@ -134,6 +136,7 @@ export const DEFAULT_RUN: RunState = {
   callsDone: [],
   droppedAt: null,
   droppedCall: null,
+  captures: [],
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -332,6 +335,11 @@ export function setActivityStatus(run: RunState, activityStatus: boolean): RunSt
 
 export function setSoundOn(run: RunState, soundOn: boolean): RunState {
   return { ...run, soundOn };
+}
+
+export function captureScreen(run: RunState, capture: Omit<Capture, 't'>): RunState {
+  const passed = advanceRun(run, CAPTURE_MINUTES, CAPTURE_BATTERY);
+  return { ...passed, captures: pushCapture(passed.captures, { ...capture, t: passed.t }) };
 }
 
 export function markNightCutPlayed(run: RunState): RunState {

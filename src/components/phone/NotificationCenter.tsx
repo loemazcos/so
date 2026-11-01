@@ -1,3 +1,4 @@
+import { Camera } from 'lucide-react';
 import NotificationItem from '@/components/phone/NotificationItem';
 import { formatClock, formatLockDate } from '@/lib/gameTime';
 import { useVisibleNotices } from '@/hooks/useVisibleNotices';
@@ -9,9 +10,10 @@ type Props = {
   dragging: boolean;
   now: Date;
   onClose: () => void;
+  onCapture?: () => void;
 };
 
-export default function NotificationCenter({ progress, dragging, now, onClose }: Props) {
+export default function NotificationCenter({ progress, dragging, now, onClose, onCapture }: Props) {
   const items = useVisibleNotices();
   const { update } = useGameState();
   const hidden = progress === 0 && !dragging;
@@ -41,6 +43,16 @@ export default function NotificationCenter({ progress, dragging, now, onClose }:
             </button>
           ) : null}
         </div>
+        {onCapture ? (
+          <button
+            type="button"
+            onClick={onCapture}
+            className="mt-3 flex items-center justify-center gap-2 rounded-[18px] bg-[var(--card)] py-3 text-[14px] font-semibold transition-transform active:scale-[0.98]"
+          >
+            <Camera size={18} strokeWidth={1.8} aria-hidden="true" />
+            스크린샷
+          </button>
+        ) : null}
         <ul className="mt-5 flex flex-1 flex-col gap-2 overflow-y-auto">
           {items.length === 0 ? (
             <li className="py-10 text-center text-[15px] text-[var(--fg-2)]">새로운 알림이 없어요</li>

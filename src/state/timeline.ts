@@ -22,7 +22,16 @@ export const RESTART_BATTERY = 5;
 
 export type Phase = 'school' | 'recess' | 'free';
 export type Crossing = { at: number; kind: 'recessStart' | 'dismissal' | 'nightCut'; recessIndex: number };
-export type Notice = { id: string; appId: string; title: string; body: string; time: string; arriveAt: number };
+export type Notice = {
+  id: string;
+  appId: string;
+  title: string;
+  body: string;
+  time: string;
+  arriveAt: number;
+  queued?: boolean;
+  threadId?: string;
+};
 export type ClockRun = { t: number; nextWakeT: number; skipLastRecess: boolean };
 
 const CROSSING_OFFSETS: { offset: number; kind: Crossing['kind']; recessIndex: number }[] = [

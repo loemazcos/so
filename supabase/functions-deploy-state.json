@@ -3,11 +3,11 @@
   "functions": {
     "dm-reply": {
       "hasChanged": false,
-      "hash": "5bd75d013d1155d5e20edc02655fa1cf2eff4dc46d70112bf917510e026acaf0"
+      "hash": "dd1d981f190a1dccc287226ccf15db7d5c8ac98347366a28413c0aaea68c48f3"
     },
     "game-api": {
       "hasChanged": false,
-      "hash": "9aef5cc454086c1870cf1d31979aa057a089b2d5f3872df7001bb2d63da951e0"
+      "hash": "c6d2d0faaf00ff6b7f405c0e51be25867434a0eba56acdc81df1cf07e9a7f10c"
     }
   }
 }

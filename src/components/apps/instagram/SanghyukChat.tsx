@@ -38,7 +38,7 @@ export default function SanghyukChat({ thread, onBack }: Props) {
     setPressed(next);
     later(PRESS_MS, () => {
       setPressed(null);
-      update((current) => answerSanghyuk(sendDm(current), next));
+      update((current) => answerSanghyuk(sendDm(current, 'sanghyuk'), next));
       if (next === 'read') {
         setPhase('done');
         return;

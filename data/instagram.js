@@ -194,6 +194,14 @@ export const posts = [
   },
 ];
 
+export const commentChoices = ['ㅋㅋㅋㅋ', '그건 좀 아닌 듯', '이거 누가 올린 거예요?'];
+
+export const sanghyukStory = {
+  caption: '운동 끝. 오늘은 조금 늦었다.',
+  tone: ['#2B3A34', '#0F1C17'],
+  postedAgo: '2시간 전',
+};
+
 export const dmThreads = [
   {
     id: 'sanghyuk',

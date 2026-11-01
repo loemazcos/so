@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { loadRun, saveRun } from '@/lib/gameSave';
-import { DEFAULT_RUN, type RunState } from '@/state/runState';
+import { DEFAULT_RUN, releaseOneNotice, type RunState } from '@/state/runState';
 
 type Status = 'loading' | 'ready' | 'error';
+
+const DND_RELEASE_MS = 300;
 
 type GameStateValue = {
   run: RunState;
@@ -66,6 +68,13 @@ export function GameStateProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', onHide);
     return () => document.removeEventListener('visibilitychange', onHide);
   }, [status, saveNow]);
+
+  const queuedId = run.dnd ? undefined : run.notices.find((notice) => notice.queued && notice.arriveAt <= run.t)?.id;
+  useEffect(() => {
+    if (!queuedId) return;
+    const id = window.setTimeout(() => update(releaseOneNotice), DND_RELEASE_MS);
+    return () => window.clearTimeout(id);
+  }, [queuedId, update]);
 
   const value = useMemo<GameStateValue>(
     () => ({ run, update, saveNow, saveFailed }),

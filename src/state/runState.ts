@@ -3,6 +3,7 @@ import { costs } from '@data/story/costs';
 import { effects } from '@data/story/effects';
 import { notices } from '@data/story/notices';
 import { onDayStart } from '@/state/dayStart';
+import { DEFAULT_SOCIAL, settleSocial, type SocialState } from '@/state/social';
 import {
   CHARGED_BATTERY,
   DAY_MIN,
@@ -56,11 +57,14 @@ export type RunState = {
   remitStatus: 'open' | 'received' | 'expired';
   sanghyuk: SanghyukState;
   erasedThrice: boolean;
+  morning: { erasedThrice: boolean; dndNight: boolean };
+  dmReadAt: Record<string, number>;
   nightCutPending: boolean;
   nightCutPlayed: boolean;
   notices: Notice[];
   notificationsCleared: boolean;
   codex: string[];
+  social: SocialState;
 };
 
 export const DEFAULT_RUN: RunState = {
@@ -84,11 +88,14 @@ export const DEFAULT_RUN: RunState = {
   remitStatus: 'open',
   sanghyuk: { openedAt: null, choice: null, answeredAt: null, ignored: false, draftErase: 0 },
   erasedThrice: false,
+  morning: { erasedThrice: false, dndNight: false },
+  dmReadAt: {},
   nightCutPending: false,
   nightCutPlayed: false,
   notices: [],
   notificationsCleared: false,
   codex: [],
+  social: DEFAULT_SOCIAL,
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -111,6 +118,7 @@ function makeNotice(run: RunState, key: string, at: number, notice: { appId: str
     body: notice.body,
     time: clockOf(at),
     arriveAt: at + (run.battery <= LOW_POWER_LINE ? LOW_POWER_DELAY : 0),
+    queued: run.dnd,
   };
 }
 
@@ -146,7 +154,18 @@ function normalize(run: RunState): RunState {
       sanghyuk: { ...sanghyuk, ignored: true },
     };
   }
-  return next;
+  const overdue = Object.keys(next.dmReadAt).filter((threadId) => next.t >= next.dmReadAt[threadId] + DAY_MIN);
+  if (overdue.length > 0) {
+    const dmReadAt = { ...next.dmReadAt };
+    overdue.forEach((threadId) => delete dmReadAt[threadId]);
+    next = {
+      ...next,
+      dmReadAt,
+      ignores: next.ignores + overdue.length,
+      mind: next.mind + (next.activityStatus ? effects.ignoredWhileActive.mind * overdue.length : 0),
+    };
+  }
+  return settleSocial(next);
 }
 
 function wakeUp(run: RunState, extraMinutes: number, shutdownNow: boolean): RunState {
@@ -168,6 +187,7 @@ function wakeUp(run: RunState, extraMinutes: number, shutdownNow: boolean): RunS
     booted: shutdown,
     notices: [...run.notices, ...onDayStart(day, wokeAt)],
     notificationsCleared: false,
+    morning: { erasedThrice: run.erasedThrice, dndNight: run.dnd },
   });
 }
 
@@ -189,8 +209,10 @@ export function openDm(run: RunState): RunState {
   return advanceRun(run, costs.dmOpen.minutes, costs.dmOpen.battery);
 }
 
-export function sendDm(run: RunState): RunState {
-  return advanceRun(run, costs.dmSend.minutes, costs.dmSend.battery);
+export function sendDm(run: RunState, threadId: string): RunState {
+  const dmReadAt = { ...run.dmReadAt };
+  delete dmReadAt[threadId];
+  return advanceRun({ ...run, dmReadAt }, costs.dmSend.minutes, costs.dmSend.battery);
 }
 
 export function openFeedPage(run: RunState): RunState {
@@ -275,4 +297,51 @@ export function markNightCutPlayed(run: RunState): RunState {
 
 export function clearNotifications(run: RunState): RunState {
   return { ...run, notices: [], notificationsCleared: true };
+}
+
+export function openDmThread(run: RunState, threadId: string, hasUnread: boolean): RunState {
+  const opened = openDm(run);
+  const dmReadAt =
+    hasUnread && opened.dmReadAt[threadId] === undefined ? { ...opened.dmReadAt, [threadId]: opened.t } : opened.dmReadAt;
+  return { ...opened, dmReadAt, notices: opened.notices.filter((notice) => notice.threadId !== threadId) };
+}
+
+export function arriveDmNotice(
+  run: RunState,
+  notice: { id: string; threadId: string; title: string; body: string; at: number },
+): RunState {
+  if (run.notices.some((item) => item.id === notice.id)) return run;
+  return {
+    ...run,
+    notices: [
+      ...run.notices,
+      {
+        id: notice.id,
+        appId: 'instagram',
+        title: notice.title,
+        body: notice.body,
+        time: clockOf(notice.at),
+        arriveAt: notice.at,
+        queued: run.dnd,
+        threadId: notice.threadId,
+      },
+    ],
+  };
+}
+
+export function releaseOneNotice(run: RunState): RunState {
+  const index = run.notices.findIndex((notice) => notice.queued);
+  if (index < 0) return run;
+  return { ...run, notices: run.notices.map((notice, i) => (i === index ? { ...notice, queued: false } : notice)) };
+}
+
+const clampStat = (value: number) => Math.min(100, Math.max(0, value));
+
+export function applyDmEffects(run: RunState, delta: { trust: number; courage: number; rumor: number }): RunState {
+  return {
+    ...run,
+    mind: clampStat(run.mind + delta.trust),
+    courage: clampStat(run.courage + delta.courage),
+    rumor: clampStat(run.rumor + delta.rumor),
+  };
 }

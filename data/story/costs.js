@@ -10,4 +10,5 @@ export const costs = {
   kakaoRoom: { minutes: 2, battery: 0.3 },
   memoRead: { minutes: 1, battery: 0.1 },
   feedPage: { minutes: 5, battery: 2 },
+  reelBatch: { minutes: 10, battery: 5 },
 };

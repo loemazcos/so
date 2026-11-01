@@ -1,31 +1,88 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, Send } from 'lucide-react';
 import Avatar from '@/components/apps/Avatar';
 import SanghyukChat from '@/components/apps/instagram/SanghyukChat';
 import { useDmStore } from '@/hooks/useDmStore';
-import { type DmMessage, type DmThread } from '@/lib/dmChat';
+import { requestDmCallback, type DmCallbackKey, type DmMessage, type DmThread } from '@/lib/dmChat';
 import { useGameState } from '@/state/GameState';
-import { openDm, openSanghyukRoom, sendDm } from '@/state/runState';
+import { applyDmEffects, arriveDmNotice, openDmThread, openSanghyukRoom, sendDm } from '@/state/runState';
 import { dmThreads as threadData } from '@data/instagram';
 
 const dmThreads = threadData as DmThread[];
+const CALLBACK_KEYS: DmCallbackKey[] = ['erasedThrice', 'dndNight'];
 
-type Props = { onBack: () => void };
+function threadNameOf(threadId: string) {
+  return dmThreads.find((thread) => thread.id === threadId)?.name ?? '';
+}
 
-export default function InstagramDm({ onBack }: Props) {
-  const store = useDmStore();
-  const { update } = useGameState();
-  const [activeId, setActiveId] = useState<string | null>(null);
+type Props = { initialThreadId: string | null };
+
+export default function InstagramDm({ initialThreadId }: Props) {
+  const { run, update } = useGameState();
+  const store = useDmStore(run.t);
+  const [activeId, setActiveId] = useState<string | null>(initialThreadId);
 
   const active = dmThreads.find((thread) => thread.id === activeId) ?? null;
+  const { refresh } = store;
+
+  useEffect(() => {
+    const pending = CALLBACK_KEYS.filter((key) => run.morning[key]);
+    if (pending.length === 0) return;
+    let mounted = true;
+    (async () => {
+      let delivered = false;
+      for (const key of pending) {
+        const result = await requestDmCallback(key).catch(() => null);
+        if (!mounted || !result?.delivered) continue;
+        delivered = true;
+        update((current) => applyDmEffects(current, { trust: result.mindDelta ?? 0, courage: 0, rumor: 0 }));
+      }
+      if (mounted && delivered) void refresh();
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [run.morning.erasedThrice, run.morning.dndNight, refresh, update]);
+
+  useEffect(() => {
+    const missing = store.rows.filter(
+      (row) =>
+        row.sender === 'them' &&
+        row.thread_id !== activeId &&
+        !run.notices.some((notice) => notice.id === `dm-${row.id}`),
+    );
+    if (missing.length === 0) return;
+    update((current) =>
+      missing.reduce(
+        (acc, row) =>
+          arriveDmNotice(acc, {
+            id: `dm-${row.id}`,
+            threadId: row.thread_id,
+            title: threadNameOf(row.thread_id),
+            body: row.body,
+            at: row.deliver_at,
+          }),
+        current,
+      ),
+    );
+  }, [store.rows, activeId, run.notices, update]);
 
   function openThread(thread: DmThread) {
-    update((run) => {
-      const opened = openDm(run);
+    const threadRows = store.rowsFor(thread.id);
+    const hasUnread = thread.id !== 'sanghyuk' && threadRows[threadRows.length - 1]?.sender === 'them';
+    update((current) => {
+      const opened = openDmThread(current, thread.id, hasUnread);
       return thread.id === 'sanghyuk' ? openSanghyukRoom(opened) : opened;
     });
     setActiveId(thread.id);
+    void store.openThread(thread.id);
   }
+
+  useEffect(() => {
+    const thread = dmThreads.find((item) => item.id === initialThreadId);
+    if (thread) openThread(thread);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (active?.id === 'sanghyuk') {
     return <SanghyukChat thread={active} onBack={() => setActiveId(null)} />;
@@ -37,13 +94,16 @@ export default function InstagramDm({ onBack }: Props) {
         thread={active}
         messages={store.messagesFor(active)}
         status={store.status}
-        typing={store.pendingId === active.id}
+        typing={store.typingId === active.id}
+        locked={store.pendingId !== null}
         notice={store.notice?.threadId === active.id ? store.notice.text : null}
         onBack={() => setActiveId(null)}
-        onSend={(text) => {
-          update(sendDm);
-          void store.send(active, text);
-        }}
+        onSend={(text) =>
+          void store.send(active, text, {
+            onSent: () => update((current) => sendDm(current, active.id)),
+            onReply: (reply) => update((current) => applyDmEffects(current, reply.effects)),
+          })
+        }
       />
     );
   }
@@ -51,9 +111,6 @@ export default function InstagramDm({ onBack }: Props) {
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+58px)]">
-        <button type="button" onClick={onBack} aria-label="뒤로" className="text-[var(--accent)]">
-          <ChevronLeft size={28} strokeWidth={2} aria-hidden="true" />
-        </button>
         <p className="flex-1 text-center text-[17px] font-semibold">DM</p>
         <span className="w-7" aria-hidden="true" />
       </header>
@@ -89,14 +146,15 @@ type ChatProps = {
   messages: DmMessage[];
   status: 'loading' | 'ready' | 'error';
   typing: boolean;
+  locked: boolean;
   notice: string | null;
   onBack: () => void;
   onSend: (text: string) => void;
 };
 
-function ChatView({ thread, messages, status, typing, notice, onBack, onSend }: ChatProps) {
+function ChatView({ thread, messages, status, typing, locked, notice, onBack, onSend }: ChatProps) {
   const [draft, setDraft] = useState('');
-  const inputLocked = status !== 'ready' || typing;
+  const inputLocked = status !== 'ready' || locked;
 
   function submit() {
     const text = draft.trim();
@@ -124,14 +182,14 @@ function ChatView({ thread, messages, status, typing, notice, onBack, onSend }: 
         {messages.map((message, index) => {
           if (message.from === 'system') {
             return (
-              <p key={index} className="my-2 text-center text-[11px] text-[var(--fg-2)]">
+              <p key={message.id ?? index} className="my-2 text-center text-[11px] text-[var(--fg-2)]">
                 {message.text}
               </p>
             );
           }
           const mine = message.from === 'me';
           return (
-            <div key={index} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+            <div key={message.id ?? index} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
               <p
                 className={`max-w-[75%] rounded-[18px] px-3.5 py-2 text-[15px] leading-[1.4] ${
                   mine ? 'rounded-br-[6px] bg-[#0A84FF] text-white' : 'rounded-bl-[6px] bg-[var(--card)] text-[var(--fg)]'
@@ -139,6 +197,7 @@ function ChatView({ thread, messages, status, typing, notice, onBack, onSend }: 
               >
                 {message.text}
               </p>
+              {mine && message.read && <span className="mt-0.5 text-[10px] text-[var(--fg-2)]">읽음</span>}
             </div>
           );
         })}

@@ -46,13 +46,31 @@ function requireDate(value: unknown): string {
   return value;
 }
 
+const DM_COLUMNS = "id, thread_id, sender, body, status, deliver_at, read_at, unsend_after_min, unsent_at, typing_cycles, created_at";
+
+type DmRow = {
+  id: number;
+  thread_id: string;
+  sender: "me" | "them";
+  body: string;
+  status: string;
+  deliver_at: number;
+  read_at: number | null;
+  unsend_after_min: number | null;
+  unsent_at: number | null;
+  typing_cycles: number;
+  created_at: string;
+};
+
+async function currentMinute(supabase: ReturnType<typeof createClient>, deviceId: string): Promise<number | null> {
+  const { data, error } = await supabase.from("game_state").select("run").eq("device_id", deviceId).maybeSingle();
+  if (error) throw new Error("state failed");
+  const t = data?.run?.t;
+  return typeof t === "number" ? t : null;
+}
+
 async function loadState(supabase: ReturnType<typeof createClient>, deviceId: string) {
-  const [dm, calendar, run] = await Promise.all([
-    supabase
-      .from("dm_messages")
-      .select("thread_id, sender, body, created_at")
-      .eq("device_id", deviceId)
-      .order("created_at", { ascending: true }),
+  const [calendar, run] = await Promise.all([
     supabase
       .from("calendar_events")
       .select("id, title, event_date, start_time, end_time, place, memo, kind, status, status_note")
@@ -61,11 +79,40 @@ async function loadState(supabase: ReturnType<typeof createClient>, deviceId: st
       .order("start_time", { ascending: true, nullsFirst: true }),
     supabase.from("game_state").select("run").eq("device_id", deviceId).maybeSingle(),
   ]);
-  if (dm.error || calendar.error || run.error) throw new Error("load failed");
+  if (calendar.error || run.error) throw new Error("load failed");
+  const gameState = run.data?.run ?? null;
+  const now = typeof gameState?.t === "number" ? gameState.t : null;
+
+  let dmMessages: DmRow[] = [];
+  if (now !== null) {
+    const dm = await supabase
+      .from("dm_messages")
+      .select(DM_COLUMNS)
+      .eq("device_id", deviceId)
+      .lte("deliver_at", now)
+      .order("deliver_at", { ascending: true })
+      .order("id", { ascending: true });
+    if (dm.error) throw new Error("load failed");
+    const rows = (dm.data ?? []) as DmRow[];
+    const isExpired = (row: DmRow) =>
+      row.sender === "them" && row.unsend_after_min !== null && now >= row.deliver_at + row.unsend_after_min;
+    dmMessages = rows.map((row) => (isExpired(row) && row.status !== "unsent" ? { ...row, status: "unsent" } : row));
+    const toMark = rows.filter((row) => isExpired(row) && row.unsent_at === null);
+    await Promise.all(
+      toMark.map((row) =>
+        supabase
+          .from("dm_messages")
+          .update({ status: "unsent", unsent_at: row.deliver_at + (row.unsend_after_min ?? 0) })
+          .eq("id", row.id)
+          .eq("device_id", deviceId),
+      ),
+    );
+  }
+
   return {
-    dmMessages: dm.data ?? [],
+    dmMessages,
     calendarEvents: calendar.data ?? [],
-    gameState: run.data?.run ?? null,
+    gameState,
   };
 }
 
@@ -84,10 +131,39 @@ async function sendDm(supabase: ReturnType<typeof createClient>, deviceId: strin
   const threadId = typeof payload.threadId === "string" ? payload.threadId : "";
   if (!THREAD_IDS.includes(threadId)) throw new BadRequest();
   const body = requireText(payload.body, 1, 300);
+  const now = await currentMinute(supabase, deviceId);
+  if (now === null) throw new BadRequest();
   const { error } = await supabase
     .from("dm_messages")
-    .insert({ device_id: deviceId, thread_id: threadId, sender: "me", body });
+    .insert({ device_id: deviceId, thread_id: threadId, sender: "me", body, status: "sent", deliver_at: now });
   if (error) throw new Error("insert failed");
+  return { ok: true };
+}
+
+async function openThread(supabase: ReturnType<typeof createClient>, deviceId: string, payload: Record<string, unknown>) {
+  const threadId = typeof payload.threadId === "string" ? payload.threadId : "";
+  if (!THREAD_IDS.includes(threadId)) throw new BadRequest();
+  const now = await currentMinute(supabase, deviceId);
+  if (now === null) throw new BadRequest();
+  const [mine, theirs] = await Promise.all([
+    supabase
+      .from("dm_messages")
+      .update({ status: "read", read_at: now })
+      .eq("device_id", deviceId)
+      .eq("thread_id", threadId)
+      .eq("sender", "me")
+      .eq("status", "sent")
+      .lte("deliver_at", now),
+    supabase
+      .from("dm_messages")
+      .update({ read_at: now })
+      .eq("device_id", deviceId)
+      .eq("thread_id", threadId)
+      .eq("sender", "them")
+      .is("read_at", null)
+      .lte("deliver_at", now),
+  ]);
+  if (mine.error || theirs.error) throw new Error("update failed");
   return { ok: true };
 }
 
@@ -133,6 +209,8 @@ Deno.serve(async (req: Request) => {
         return json(await loadState(supabase, deviceId));
       case "sendDm":
         return json(await sendDm(supabase, deviceId, payload));
+      case "openThread":
+        return json(await openThread(supabase, deviceId, payload));
       case "saveCalendarEvent":
         return json(await saveCalendarEvent(supabase, deviceId, payload));
       case "saveState":

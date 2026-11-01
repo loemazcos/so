@@ -4,6 +4,10 @@ import { effects } from '@data/story/effects';
 import { notices } from '@data/story/notices';
 import { onDayStart } from '@/state/dayStart';
 import { DEFAULT_SOCIAL, settleSocial, type SocialState } from '@/state/social';
+import { DEFAULT_CONSULT, type ConsultState } from '@/state/consults';
+import { DEFAULT_DOUBLES, settleDoubles, type DoublesState } from '@/state/doubles';
+import { settleKakaoEvents, type KakaoAddition } from '@/state/kakaoEvents';
+import { clampStat } from '@/state/stats';
 import {
   CHARGED_BATTERY,
   DAY_MIN,
@@ -65,6 +69,11 @@ export type RunState = {
   notificationsCleared: boolean;
   codex: string[];
   social: SocialState;
+  consult: ConsultState;
+  kakaoAdded: KakaoAddition[];
+  uniform: 1 | 2 | null;
+  rumorPeak: number;
+  doubles: DoublesState;
 };
 
 export const DEFAULT_RUN: RunState = {
@@ -96,6 +105,11 @@ export const DEFAULT_RUN: RunState = {
   notificationsCleared: false,
   codex: [],
   social: DEFAULT_SOCIAL,
+  consult: DEFAULT_CONSULT,
+  kakaoAdded: [],
+  uniform: null,
+  rumorPeak: 10,
+  doubles: DEFAULT_DOUBLES,
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -165,7 +179,8 @@ function normalize(run: RunState): RunState {
       mind: next.mind + (next.activityStatus ? effects.ignoredWhileActive.mind * overdue.length : 0),
     };
   }
-  return settleSocial(next);
+  next = { ...next, rumorPeak: Math.max(next.rumorPeak, next.rumor) };
+  return settleSocial(settleKakaoEvents(settleDoubles(next)));
 }
 
 function wakeUp(run: RunState, extraMinutes: number, shutdownNow: boolean): RunState {
@@ -334,8 +349,6 @@ export function releaseOneNotice(run: RunState): RunState {
   if (index < 0) return run;
   return { ...run, notices: run.notices.map((notice, i) => (i === index ? { ...notice, queued: false } : notice)) };
 }
-
-const clampStat = (value: number) => Math.min(100, Math.max(0, value));
 
 export function applyDmEffects(run: RunState, delta: { trust: number; courage: number; rumor: number }): RunState {
   return {

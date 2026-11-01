@@ -6,13 +6,16 @@ import { formatDayLabel, type KakaoRoom } from '@/lib/kakao';
 type Props = {
   room: KakaoRoom;
   votes: Record<string, number>;
+  consultOpen: boolean;
+  onConsult: () => void;
   onBack: () => void;
   onSend: (text: string) => void;
   onVote: (messageId: string, optionIndex: number) => void;
 };
 
-export default function KakaoRoomChat({ room, votes, onBack, onSend, onVote }: Props) {
+export default function KakaoRoomChat({ room, votes, consultOpen, onConsult, onBack, onSend, onVote }: Props) {
   const [draft, setDraft] = useState('');
+  const [consultDismissed, setConsultDismissed] = useState(false);
   const notice = [...room.messages].reverse().find((message) => message.type === 'notice');
 
   function submit() {
@@ -38,6 +41,22 @@ export default function KakaoRoomChat({ room, votes, onBack, onSend, onVote }: P
         <div className="mx-3 mt-2 flex items-start gap-2 rounded-[12px] bg-[var(--card)] px-3 py-2">
           <Megaphone size={15} strokeWidth={2} className="mt-0.5 shrink-0 text-[var(--fg-2)]" aria-hidden="true" />
           <p className="line-clamp-2 text-[12px] leading-[1.4] text-[var(--fg)]">{notice.text}</p>
+        </div>
+      )}
+
+      {consultOpen && !consultDismissed && (
+        <div className="mx-3 mt-2 flex items-center gap-2 rounded-[12px] border border-[var(--line)] bg-[var(--card)] px-3 py-2.5">
+          <p className="min-w-0 flex-1 text-[13px] leading-[1.4] text-[var(--fg)]">오늘 밤 상담 받을래요?</p>
+          <button type="button" onClick={() => setConsultDismissed(true)} className="h-8 px-2 text-[12px] text-[var(--fg-2)]">
+            나중에
+          </button>
+          <button
+            type="button"
+            onClick={onConsult}
+            className="h-8 rounded-full bg-[#FEE500] px-3 text-[12px] font-semibold text-[#191919]"
+          >
+            상담 받기
+          </button>
         </div>
       )}
 

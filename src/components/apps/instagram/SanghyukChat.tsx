@@ -4,6 +4,9 @@ import Avatar from '@/components/apps/Avatar';
 import { type DmThread } from '@/lib/dmChat';
 import { useGameState } from '@/state/GameState';
 import { answerSanghyuk, eraseDraft, sendDm } from '@/state/runState';
+import { openDoublesPrompt } from '@/state/doubles';
+import { chooseDoublesGo, chooseDoublesSick, finishRhythm } from '@/state/doublesActions';
+import RhythmTap from '@/components/apps/instagram/RhythmTap';
 import { sanghyukChoices, sanghyukEnding } from '@data/story/sanghyuk';
 
 type Choice = 'why' | 'read';
@@ -22,7 +25,9 @@ export default function SanghyukChat({ thread, onBack }: Props) {
   const [pressed, setPressed] = useState<Choice | null>(null);
   const [phase, setPhase] = useState<ReplyPhase>(answeredAt === null ? 'idle' : 'done');
   const [draft, setDraft] = useState('');
+  const [rhythmId, setRhythmId] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
+  const doublesPrompt = openDoublesPrompt(run.doubles, run.t);
 
   useEffect(() => {
     const pending = timers.current;
@@ -67,7 +72,7 @@ export default function SanghyukChat({ thread, onBack }: Props) {
   const showEnding = choice === 'why' && phase === 'done';
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       <header className="flex items-center gap-2 border-b border-[var(--line)] px-3 pb-2.5 pt-[calc(env(safe-area-inset-top)+58px)]">
         <button type="button" onClick={onBack} aria-label="목록으로" className="p-1 text-[var(--accent)]">
           <ChevronLeft size={26} strokeWidth={2} aria-hidden="true" />
@@ -108,6 +113,35 @@ export default function SanghyukChat({ thread, onBack }: Props) {
               {choice === 'why' ? whyLabel : readLabel}
             </p>
           </div>
+        )}
+
+        {doublesPrompt && rhythmId === null && (
+          <>
+            <div className="flex justify-start">
+              <p className="max-w-[75%] rounded-[18px] rounded-bl-[6px] bg-[var(--card)] px-3.5 py-2 text-[15px] leading-[1.4] text-[var(--fg)]">
+                {doublesPrompt.text}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  update((current) => chooseDoublesGo(current, doublesPrompt.id));
+                  setRhythmId(doublesPrompt.id);
+                }}
+                className="h-10 rounded-full bg-[var(--card)] text-[14px] font-semibold text-[var(--fg)]"
+              >
+                나갈게요
+              </button>
+              <button
+                type="button"
+                onClick={() => update((current) => chooseDoublesSick(current, doublesPrompt.id))}
+                className="h-10 rounded-full bg-[var(--card)] text-[14px] font-semibold text-[var(--fg)]"
+              >
+                몸이 안 좋아서요…
+              </button>
+            </div>
+          </>
         )}
 
         {showEnding &&
@@ -167,6 +201,19 @@ export default function SanghyukChat({ thread, onBack }: Props) {
             {leaveLabel}
           </button>
         </div>
+      )}
+
+      {rhythmId !== null && (
+        <RhythmTap
+          onFinish={(successes) => {
+            update((current) => finishRhythm(current, rhythmId, successes));
+            setRhythmId(null);
+          }}
+          onSkip={() => {
+            update((current) => finishRhythm(current, rhythmId, null));
+            setRhythmId(null);
+          }}
+        />
       )}
 
       <form

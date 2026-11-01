@@ -42,7 +42,7 @@ export function minuteOfDay(t: number): number {
   return t % DAY_MIN;
 }
 
-function parseClock(time: string): number {
+export function parseClock(time: string): number {
   const [hour, minute] = time.split(':').map(Number);
   return hour * 60 + minute;
 }

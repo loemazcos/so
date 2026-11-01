@@ -2,22 +2,35 @@ import { useMemo, useState } from 'react';
 import KakaoRoomList from '@/components/apps/kakao/KakaoRoomList';
 import KakaoRoomChat from '@/components/apps/kakao/KakaoRoomChat';
 import { kakaoRooms, type KakaoMessage, type KakaoRoom } from '@/lib/kakao';
+import { useGameState } from '@/state/GameState';
+import { openConsult, type ConsultRoom } from '@/state/consults';
+import { chooseConsult, voteUniform } from '@/state/kakaoActions';
+import { UNIFORM_POLL_ID } from '@/state/kakaoEvents';
+
+const CONSULT_ROOMS: string[] = ['donghyun', 'jaehyun'];
 
 export default function KakaoApp() {
+  const { run, update } = useGameState();
   const [openId, setOpenId] = useState<string | null>(null);
   const [readIds, setReadIds] = useState<string[]>([]);
   const [sent, setSent] = useState<Record<string, KakaoMessage[]>>({});
-  const [votes, setVotes] = useState<Record<string, number>>({});
 
   const rooms = useMemo<KakaoRoom[]>(
     () =>
       kakaoRooms.map((room) => ({
         ...room,
         unread: readIds.includes(room.id) ? 0 : room.unread,
-        messages: [...room.messages, ...(sent[room.id] ?? [])],
+        messages: [
+          ...room.messages,
+          ...run.kakaoAdded.filter((message) => message.room === room.id),
+          ...(sent[room.id] ?? []),
+        ],
       })),
-    [readIds, sent],
+    [readIds, sent, run.kakaoAdded],
   );
+
+  const votes: Record<string, number> = run.uniform === null ? {} : { [UNIFORM_POLL_ID]: run.uniform - 1 };
+  const consult = openConsult(run.consult, run.t);
 
   const activeRoom = rooms.find((room) => room.id === openId) ?? null;
 
@@ -26,8 +39,13 @@ export default function KakaoApp() {
       <KakaoRoomChat
         room={activeRoom}
         votes={votes}
+        consultOpen={consult !== null && CONSULT_ROOMS.includes(activeRoom.id)}
+        onConsult={() => update((current) => chooseConsult(current, activeRoom.id as ConsultRoom))}
         onBack={() => setOpenId(null)}
-        onVote={(messageId, optionIndex) => setVotes((current) => ({ ...current, [messageId]: optionIndex }))}
+        onVote={(messageId, optionIndex) => {
+          if (messageId !== UNIFORM_POLL_ID) return;
+          update((current) => voteUniform(current, optionIndex === 0 ? 1 : 2));
+        }}
         onSend={(text) =>
           setSent((current) => ({
             ...current,

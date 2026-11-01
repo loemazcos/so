@@ -21,6 +21,8 @@ export const CALL_MIN_BATTERY = 8;
 export const CALL_STEP_MIN = 20 / 60;
 export const CALL_STEP_BATTERY = 0.5;
 export const CALL_DROP_MIND = -10;
+export const CALLBACK_WINDOW = 5;
+export const CHARGE_REVIVE_BATTERY = 20;
 
 export const callList = calls as CallScript[];
 
@@ -53,7 +55,18 @@ export function missCall(run: RunState, call: CallScript): RunState {
   return { ...run, callsDone: [...run.callsDone, call.id], notices: [...run.notices, notice] };
 }
 
+export function canCallBack(run: RunState): boolean {
+  return (
+    run.droppedAt !== null &&
+    run.t <= run.droppedAt + CALLBACK_WINDOW &&
+    run.battery >= CALL_MIN_BATTERY &&
+    run.activeCall === null
+  );
+}
+
 export function settleCalls(run: RunState): RunState {
+  const expired = run.droppedAt !== null && run.t > run.droppedAt + CALLBACK_WINDOW;
+  const cleared = expired ? { ...run, droppedAt: null, droppedCall: null } : run;
   return callList.reduce<RunState>((acc, call) => {
     if (acc.callsDone.includes(call.id)) return acc;
     const at = callAt(call);

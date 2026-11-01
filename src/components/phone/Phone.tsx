@@ -10,6 +10,7 @@ import CallScreen from '@/components/phone/CallScreen';
 import ClueBanner from '@/components/phone/ClueBanner';
 import ControlCenter from '@/components/phone/ControlCenter';
 import DayCutOverlay from '@/components/phone/DayCutOverlay';
+import DeadPhone from '@/components/phone/DeadPhone';
 import HomeScreen from '@/components/phone/HomeScreen';
 import IncomingCall from '@/components/phone/IncomingCall';
 import LockScreen from '@/components/phone/LockScreen';
@@ -22,11 +23,13 @@ import Wallpaper from '@/components/phone/Wallpaper';
 import { useClueDiscovery } from '@/hooks/useClueDiscovery';
 import { useGameClock } from '@/hooks/useGameClock';
 import { isNightTime } from '@/lib/gameTime';
-import { CALL_MIN_BATTERY, findCall, incomingCall } from '@/state/calls';
+import { CALL_MIN_BATTERY, canCallBack, findCall, incomingCall } from '@/state/calls';
 import { remainingMinutes } from '@/lib/remit';
 import { useGameState } from '@/state/GameState';
 import {
   answerCall,
+  callBack,
+  chargePhone,
   declineCall,
   finishBoot,
   finishSleep,
@@ -324,6 +327,16 @@ export default function Phone() {
           />
         ) : null}
 
+        {!locked && canCallBack(run) ? (
+          <button
+            type="button"
+            onClick={() => update(callBack)}
+            className="absolute left-1/2 top-[calc(env(safe-area-inset-top)+112px)] z-[54] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#34C759] px-4 py-2 text-[13px] font-semibold text-white transition-transform active:scale-95"
+          >
+            상혁에게 다시 걸기
+          </button>
+        ) : null}
+
         {!locked && lowBattery ? (
           <p className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+104px)] z-[54] text-center text-[12px] font-semibold text-[#FF3B30]">
             배터리 {run.battery}%
@@ -366,6 +379,8 @@ export default function Phone() {
         ) : null}
 
         {cut ? <DayCutOverlay key={cut.day} text={cut.text} onDone={clearDayCut} /> : null}
+
+        {!locked && run.battery <= 0 ? <DeadPhone onCharge={() => update(chargePhone)} /> : null}
 
         {run.booted ? <BootScreen onDone={finishBootScreen} /> : null}
 

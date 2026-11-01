@@ -12,6 +12,8 @@ import {
   CALL_MIN_BATTERY,
   CALL_STEP_BATTERY,
   CALL_STEP_MIN,
+  CHARGE_REVIVE_BATTERY,
+  canCallBack,
   findCall,
   type CallChoice,
   incomingCall,
@@ -88,6 +90,8 @@ export type RunState = {
   doubles: DoublesState;
   activeCall: { id: string; step: number; picks: number[] } | null;
   callsDone: string[];
+  droppedAt: number | null;
+  droppedCall: string | null;
 };
 
 export const DEFAULT_RUN: RunState = {
@@ -126,6 +130,8 @@ export const DEFAULT_RUN: RunState = {
   doubles: DEFAULT_DOUBLES,
   activeCall: null,
   callsDone: [],
+  droppedAt: null,
+  droppedCall: null,
 };
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -382,8 +388,30 @@ export function hangUpCall(run: RunState): RunState {
 }
 
 function dropCall(run: RunState): RunState {
-  const mind = clampStat(run.mind + CALL_DROP_MIND);
-  return advanceRun({ ...run, mind, battery: 0, activeCall: null }, 0, 0);
+  return {
+    ...run,
+    mind: clampStat(run.mind + CALL_DROP_MIND),
+    battery: 0,
+    activeCall: null,
+    droppedAt: run.t,
+    droppedCall: run.activeCall?.id ?? null,
+  };
+}
+
+export function chargePhone(run: RunState): RunState {
+  if (run.battery > 0) return run;
+  return { ...run, battery: CHARGE_REVIVE_BATTERY, charging: true, booted: true };
+}
+
+export function callBack(run: RunState): RunState {
+  if (!canCallBack(run) || run.droppedCall === null) return run;
+  return {
+    ...run,
+    mind: clampStat(run.mind + Math.abs(CALL_DROP_MIND)),
+    activeCall: { id: run.droppedCall, step: 0, picks: [] },
+    droppedAt: null,
+    droppedCall: null,
+  };
 }
 
 export function stepCall(run: RunState, choice: number | null): RunState {
